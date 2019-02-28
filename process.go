@@ -5,18 +5,18 @@ type Process interface {
   Task()
 }
 
-// Done notifies that the process is finished
+// Done notifies that the task is finished
 type Done struct{}
 
 // Signal is a channel signalling of a completion
-type Signal chan struct{}
+type Wait chan struct{}
 
 // Run the Process with Task() function
-func Run(c Process) Signal {
-  s := make(Signal)
+func Run(c Process) Wait {
+  wait := make(Wait)
   go func() {
     c.Task()
-    s <- Done{}
+    wait <- Done{}
   }()
-  return s
+  return wait
 }
