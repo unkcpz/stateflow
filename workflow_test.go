@@ -15,7 +15,7 @@ func TestSetWfName(t *testing.T) {
 
 func newDoubleAddOneEcho() (*Workflow, error) {
   n := NewWorkflow("new", 8, 0)
-  // Process
+  // Task
   e1 := new(echo)
   e2 := new(echo)
 
@@ -87,13 +87,13 @@ func testWorkflowWithNumberSequence(n *Workflow, t *testing.T) {
   <-wait
 }
 
-// Process for test
+// Task for test
 type echo struct {
   In <-chan int
   Out chan<- int
 }
 
-func (c *echo) Task() {
+func (c *echo) Execute() {
   for i := range c.In {
     c.Out <- i + 1
   }

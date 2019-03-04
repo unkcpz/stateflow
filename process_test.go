@@ -4,8 +4,8 @@ import (
   "testing"
 )
 
-// Test a simple Process that runs only once
-func TestSimpleProcess(t *testing.T) {
+// Test a simple Task that runs only once
+func TestSimpleTask(t *testing.T) {
   in := make(chan int)
   out := make(chan int)
   proc := &doubleOnce{
@@ -28,13 +28,13 @@ type doubleOnce struct {
   Out chan<- int
 }
 
-func (proc *doubleOnce) Task() {
+func (proc *doubleOnce) Execute() {
   i := <-proc.In
   proc.Out <- 2 * i
 }
 
-// Test a simple long running process with one input
-func TestSimpleLongRunningProcess(t *testing.T) {
+// Test a simple long running Task with one input
+func TestSimpleLongRunningTask(t *testing.T) {
   tests := []struct {
     in int
     expected int
@@ -70,13 +70,13 @@ type doubler struct {
   Out chan<- int
 }
 
-func (proc *doubler) Task() {
+func (proc *doubler) Execute() {
   for i := range proc.In {
     proc.Out <- 2 * i
   }
 }
 
-func TestProcessWithTwoInputs(t *testing.T) {
+func TestTaskWithTwoInputs(t *testing.T) {
   tests := []struct {
     op1 int
     op2 int
@@ -124,7 +124,7 @@ type adder struct {
   Sum chan<- int
 }
 
-func (c *adder) Task() {
+func (c *adder) Execute() {
   guard := NewInputGuard("op1", "op2")
 
   op1Buf := make([]int, 0, 10)

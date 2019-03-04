@@ -12,7 +12,7 @@ type Workflow struct {
   capacity int
   bufferSize int
   waitGrp *sync.WaitGroup
-  procs map[string]Process
+  procs map[string]Tasker
   inPorts map[string]port
   outPorts map[string]port
   connections []connection
@@ -41,7 +41,7 @@ func NewWorkflow(name string, maxGoroutineTasks, bufferSize int) *Workflow {
     capacity: maxGoroutineTasks,
     bufferSize: bufferSize,
     waitGrp:  new(sync.WaitGroup),
-    procs:  make(map[string]Process, maxGoroutineTasks),
+    procs:  make(map[string]Tasker, maxGoroutineTasks),
     inPorts:  make(map[string]port, maxGoroutineTasks),
     outPorts: make(map[string]port, maxGoroutineTasks),
     connections:  make([]connection, 0, maxGoroutineTasks),
@@ -49,8 +49,8 @@ func NewWorkflow(name string, maxGoroutineTasks, bufferSize int) *Workflow {
   return wf
 }
 
-// Add adds a new process with a given name to the network.
-func (n *Workflow) Add(name string, proc Process) error {
+// Add adds a new Task with a given name to the network.
+func (n *Workflow) Add(name string, proc Tasker) error {
   n.procs[name] = proc
   return nil
 }
@@ -103,10 +103,10 @@ func (n *Workflow) ConnectBuf(senderName, senderPort, receiverName, receiverPort
 
 func (n *Workflow) getProcPort(procName, portName string, dir reflect.ChanDir) (reflect.Value, error) {
   nilValue := reflect.ValueOf(nil)
-  // Ensure process exists
+  // Ensure Task exists
   proc, ok := n.procs[procName]
   if !ok {
-    return nilValue, fmt.Errorf("Connect error: process '%s' not found", procName)
+    return nilValue, fmt.Errorf("Connect error: Task '%s' not found", procName)
   }
 
   // Ensure sender is settable
@@ -115,7 +115,7 @@ func (n *Workflow) getProcPort(procName, portName string, dir reflect.ChanDir) (
     val = val.Elem()
   }
   if !val.CanSet() {
-    return nilValue, fmt.Errorf("Connect error: process '%s' is not settable", procName)
+    return nilValue, fmt.Errorf("Connect error: Task '%s' is not settable", procName)
   }
 
   var portVal reflect.Value
@@ -125,16 +125,15 @@ func (n *Workflow) getProcPort(procName, portName string, dir reflect.ChanDir) (
     err = errors.New("")
   }
   if err != nil {
-    return nilValue, fmt.Errorf("Connect error: process '%s' does not have port '%s'", procName, portName)
+    return nilValue, fmt.Errorf("Connect error: Task '%s' does not have port '%s'", procName, portName)
   }
 
   return portVal, nil
 }
 
-// Task runs the net
-func (n *Workflow) Task() {
+// Execute runs the net
+func (n *Workflow) Execute() {
   for _, p := range n.procs {
-    fmt.Println(reflect.ValueOf(p))
     n.waitGrp.Add(1)
     wait := Run(p)
     proc := p
@@ -147,7 +146,7 @@ func (n *Workflow) Task() {
   n.waitGrp.Wait()
 }
 
-func (n *Workflow) closeProcOuts(proc Process) {
+func (n *Workflow) closeProcOuts(proc Tasker) {
   val := reflect.ValueOf(proc).Elem()
   for i := 0; i < val.NumField(); i++ {
     field := val.Field(i)
@@ -179,7 +178,7 @@ func (n *Workflow) MapInPort(name, procName, procPort string) error {
   var ips reflect.Value
   var err error
   if _, found := n.procs[procName]; !found {
-    return fmt.Errorf("Could not map inport: process '%s' not found", procName)
+    return fmt.Errorf("Could not map inport: Task '%s' not found", procName)
   }
   ips, err = n.getProcPort(procName, procPort, reflect.RecvDir)
   if err != nil {
@@ -193,7 +192,7 @@ func (n *Workflow) MapOutPort(name, procName, procPort string) error {
   var ips reflect.Value
   var err error
   if _, found := n.procs[procName]; !found {
-    return fmt.Errorf("Could not map outport: process '%s' not found", procName)
+    return fmt.Errorf("Could not map outport: Task '%s' not found", procName)
   }
   ips, err = n.getProcPort(procName, procPort, reflect.SendDir)
   if err != nil {

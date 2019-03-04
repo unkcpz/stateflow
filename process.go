@@ -1,21 +1,28 @@
 package giida
 
-// Process is a unit run a task
-type Process interface {
-  Task()
+// Tasker is a unit run a Execute
+type Tasker interface {
+  Execute()
 }
 
-// Done notifies that the task is finished
+// type Process struct {
+//   Name string
+//   ID  int
+//   State   ENUM
+//   Task  Tasker
+// }
+
+// Done notifies that the Execute is finished
 type Done struct{}
 
 // Signal is a channel signalling of a completion
 type Wait chan struct{}
 
-// Run the Process with Task() function
-func Run(c Process) Wait {
+// Run the Tasker with Execute() function
+func Run(c Tasker) Wait {
   wait := make(Wait)
   go func() {
-    c.Task()
+    c.Execute()
     wait <- Done{}
   }()
   return wait
