@@ -75,7 +75,7 @@ func testWorkflowWithNumberSequence(n *Workflow, t *testing.T) {
     i++
   }
 
-  <- wait
+  <-wait
 }
 
 // Process for test

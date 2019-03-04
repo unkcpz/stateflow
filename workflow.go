@@ -134,12 +134,13 @@ func (n *Workflow) getProcPort(procName, portName string, dir reflect.ChanDir) (
 // Task runs the net
 func (n *Workflow) Task() {
   for _, p := range n.procs {
+    fmt.Println(reflect.ValueOf(p))
     n.waitGrp.Add(1)
     wait := Run(p)
     go func() {
+      defer n.waitGrp.Done()
       <-wait
       n.closeProcOuts(p)
-      n.waitGrp.Done()
     }()
   }
   n.waitGrp.Wait()
