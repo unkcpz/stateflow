@@ -25,6 +25,9 @@ func newDoubleEcho() (*Workflow, error) {
   if err := n.Add("e2", e2); err != nil {
     return nil, err
   }
+  if err := n.Connect("e1", "Out", "e2", "In"); err != nil {
+    return nil, err
+  }
   // Ports
   if err := n.MapInPort("netIn", "e1", "In"); err != nil {
     return nil, err
@@ -47,7 +50,7 @@ func TestSimpleWorkflow(t *testing.T) {
 }
 
 func testWorkflowWithNumberSequence(n *Workflow, t *testing.T) {
-  data := []int{93, 52, 1, 24, 35, 63, 634,12}
+  data := []int{93, 52, 1, 24, 35, 63, 634, 12}
 
   in := make(chan int)
   out := make(chan int)

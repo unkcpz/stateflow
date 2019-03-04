@@ -75,3 +75,84 @@ func (proc *doubler) Task() {
     proc.Out <- 2 * i
   }
 }
+
+func TestProcessWithTwoInputs(t *testing.T) {
+  tests := []struct {
+    op1 int
+    op2 int
+    sums int
+  }{
+    {3, 38, 41},
+    {3, 4, 7},
+    {92, 4, 96},
+  }
+
+  in1 := make(chan int)
+  in2 := make(chan int)
+  out := make(chan int)
+  c := &adder{in1, in2, out}
+
+  wait := Run(c)
+
+  go func() {
+    for _, t := range tests {
+      in1 <-t.op1
+    }
+    close(in1)
+  }()
+  go func() {
+    for _, t := range tests {
+      in2 <-t.op2
+    }
+    close(in2)
+  }()
+
+  for _, test := range tests {
+    got := <-out
+    expected := test.sums
+    if got != expected {
+      t.Errorf("%d + %d = %d, expect %d", test.op1, test.op2, got, expected)
+    }
+  }
+
+  <-wait
+}
+
+type adder struct {
+  Op1 <-chan int
+  Op2 <-chan int
+  Sum chan<- int
+}
+
+func (c *adder) Task() {
+  guard := NewInputGuard("op1", "op2")
+
+  op1Buf := make([]int, 0, 10)
+  op2Buf := make([]int, 0, 10)
+  addOp := func(op int, buf, otherBuf *[]int) {
+    if len(*otherBuf) > 0 {
+      otherOp := (*otherBuf)[0]
+      *otherBuf = (*otherBuf)[1:]
+      c.Sum <- (op + otherOp)
+    } else {
+      *buf = append(*buf, op)
+    }
+  }
+
+  for {
+    select {
+    case op1, ok := <-c.Op1:
+      if ok {
+        addOp(op1, &op1Buf, &op2Buf)
+      } else if guard.Complete("op1") {
+        return
+      }
+    case op2, ok := <-c.Op2:
+      if ok {
+        addOp(op2, &op2Buf, &op1Buf)
+      } else if guard.Complete("op2") {
+        return
+      }
+    }
+  }
+}
