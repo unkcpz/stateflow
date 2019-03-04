@@ -13,7 +13,7 @@ func TestSetWfName(t *testing.T) {
   }
 }
 
-func newDoubleEcho() (*Workflow, error) {
+func newDoubleAddOneEcho() (*Workflow, error) {
   n := NewWorkflow("new", 8, 0)
   // Process
   e1 := new(echo)
@@ -40,7 +40,7 @@ func newDoubleEcho() (*Workflow, error) {
 }
 
 func TestSimpleWorkflow(t *testing.T) {
-  n, err := newDoubleEcho()
+  n, err := newDoubleAddOneEcho()
   if err != nil {
     t.Error(err)
     return
@@ -50,7 +50,16 @@ func TestSimpleWorkflow(t *testing.T) {
 }
 
 func testWorkflowWithNumberSequence(n *Workflow, t *testing.T) {
-  data := []int{93, 52, 1, 24, 35, 63, 634, 12}
+  tests := []struct {
+    in int
+    expected int
+  } {
+    {93, 95},
+    {52, 54},
+    {1, 3},
+    {24, 26},
+    {35, 37},
+  }
 
   in := make(chan int)
   out := make(chan int)
@@ -60,17 +69,17 @@ func testWorkflowWithNumberSequence(n *Workflow, t *testing.T) {
   wait := Run(n)
 
   go func() {
-    for _, n := range data {
-      in <- n
+    for _, t := range tests {
+      in <- t.in
     }
     close(in)
   }()
 
   i := 0
   for got := range out {
-    expected := data[i]
+    expected := tests[i].expected
     if got != expected {
-      t.Errorf("%d != %d\n", got, expected)
+      t.Errorf("%d + 2 != %d\n", tests[i].in, tests[i].expected)
     }
     i++
   }
@@ -86,6 +95,6 @@ type echo struct {
 
 func (c *echo) Task() {
   for i := range c.In {
-    c.Out <- i
+    c.Out <- i + 1
   }
 }

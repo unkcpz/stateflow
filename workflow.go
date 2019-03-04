@@ -21,7 +21,7 @@ type Workflow struct {
 type port struct {
   proc string
   port string
-  channel reflect.Value
+  ips reflect.Value
 }
 
 type portName struct {
@@ -32,7 +32,7 @@ type portName struct {
 type connection struct {
   src portName
   tgt portName
-  channel reflect.Value
+  ips reflect.Value
 }
 
 func NewWorkflow(name string, maxGoroutineTasks, bufferSize int) *Workflow {
@@ -71,7 +71,7 @@ func (n *Workflow) ConnectBuf(senderName, senderPort, receiverName, receiverPort
     return err
   }
 
-  var channel reflect.Value
+  var ips reflect.Value
   // if !receiverPortVal.IsNil() {
   //   // Find existing channel attached to the receiver
   //   channel =
@@ -79,24 +79,24 @@ func (n *Workflow) ConnectBuf(senderName, senderPort, receiverName, receiverPort
 
   sndPortType := senderPortVal.Type()
   // Create a new channel if none of the existing channels found
-  if !channel.IsValid() {
+  if !ips.IsValid() {
     // Make a channel of an appropriate type
     chanType := reflect.ChanOf(reflect.BothDir, sndPortType.Elem())
-    channel = reflect.MakeChan(chanType, bufferSize)
+    ips = reflect.MakeChan(chanType, bufferSize)
   }
   // Set the channels
   if senderPortVal.IsNil() {
-    senderPortVal.Set(channel)
+    senderPortVal.Set(ips)
   }
   if receiverPortVal.IsNil() {
-    receiverPortVal.Set(channel)
+    receiverPortVal.Set(ips)
   }
 
   // Add connection info
   n.connections = append(n.connections, connection{
     src: portName{proc: senderName, port: senderPort},
     tgt: portName{proc: receiverName, port: receiverPort},
-    channel: channel,
+    ips: ips,
   })
   return nil
 }
@@ -137,10 +137,11 @@ func (n *Workflow) Task() {
     fmt.Println(reflect.ValueOf(p))
     n.waitGrp.Add(1)
     wait := Run(p)
+    proc := p
     go func() {
       defer n.waitGrp.Done()
       <-wait
-      n.closeProcOuts(p)
+      n.closeProcOuts(proc)
     }()
   }
   n.waitGrp.Wait()
@@ -155,89 +156,90 @@ func (n *Workflow) closeProcOuts(proc Process) {
       fieldType.ChanDir()&reflect.SendDir != 0 && fieldType.ChanDir()&reflect.RecvDir == 0) {
         continue
     }
+    field.Close()
   }
 }
 
 func (n *Workflow) getInPort(name string) (reflect.Value, error) {
   if pName, ok := n.inPorts[name]; ok {
-    return pName.channel, nil
+    return pName.ips, nil
   }
   return reflect.ValueOf(nil), fmt.Errorf("Inport not found: '%s'", name)
 }
 
 func (n *Workflow) getOutPort(name string) (reflect.Value, error) {
   if pName, ok := n.outPorts[name]; ok {
-    return pName.channel, nil
+    return pName.ips, nil
   }
   return reflect.ValueOf(nil), fmt.Errorf("Outport not found: '%s'", name)
 }
 
 // MapInPort adds an inport to the net and maps it to a contained proc's port
 func (n *Workflow) MapInPort(name, procName, procPort string) error {
-  var channel reflect.Value
+  var ips reflect.Value
   var err error
   if _, found := n.procs[procName]; !found {
     return fmt.Errorf("Could not map inport: process '%s' not found", procName)
   }
-  channel, err = n.getProcPort(procName, procPort, reflect.RecvDir)
+  ips, err = n.getProcPort(procName, procPort, reflect.RecvDir)
   if err != nil {
     return err
   }
-  n.inPorts[name] = port{proc: procName, port: procPort, channel: channel}
+  n.inPorts[name] = port{proc: procName, port: procPort, ips: ips}
   return nil
 }
 
 func (n *Workflow) MapOutPort(name, procName, procPort string) error {
-  var channel reflect.Value
+  var ips reflect.Value
   var err error
   if _, found := n.procs[procName]; !found {
     return fmt.Errorf("Could not map outport: process '%s' not found", procName)
   }
-  channel, err = n.getProcPort(procName, procPort, reflect.SendDir)
+  ips, err = n.getProcPort(procName, procPort, reflect.SendDir)
   if err != nil {
     return err
   }
-  n.outPorts[name] = port{proc: procName, port: procPort, channel: channel}
+  n.outPorts[name] = port{proc: procName, port: procPort, ips: ips}
   return nil
 }
 
 // SetInPort assigns a channel to a network's inport to talk to the outer world
-func (n *Workflow) SetInPort(name string, channel interface{}) error {
+func (n *Workflow) SetInPort(name string, ips interface{}) error {
   p, err := n.getInPort(name)
   if err != nil {
     return err
   }
   // Try to set it
   if p.CanSet() {
-    p.Set(reflect.ValueOf(channel))
+    p.Set(reflect.ValueOf(ips))
   } else {
     return fmt.Errorf("Cannot set graph inport: '%s'", name)
   }
 
   // Save it in inPorts to be used with IIPs if needed
   if p, ok := n.inPorts[name]; ok {
-    p.channel = reflect.ValueOf(channel)
+    p.ips = reflect.ValueOf(ips)
     n.inPorts[name] = p
   }
   return nil
 }
 
 // SetOutPort assigns a channel to a network's outport to talk to the outer world
-func (n *Workflow) SetOutPort(name string, channel interface{}) error {
+func (n *Workflow) SetOutPort(name string, ips interface{}) error {
   p, err := n.getOutPort(name)
   if err != nil {
     return err
   }
   // Try to set it
   if p.CanSet() {
-    p.Set(reflect.ValueOf(channel))
+    p.Set(reflect.ValueOf(ips))
   } else {
     return fmt.Errorf("Cannot set graph inport: '%s'", name)
   }
 
   // Save it in outPorts to be used with IIPs if needed
   if p, ok := n.outPorts[name]; ok {
-    p.channel = reflect.ValueOf(channel)
+    p.ips = reflect.ValueOf(ips)
     n.outPorts[name] = p
   }
   return nil
