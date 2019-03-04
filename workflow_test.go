@@ -5,7 +5,7 @@ import (
 )
 
 func TestSetWfName(t *testing.T) {
-  wf := NewWorkflow("workflowname", 8)
+  wf := NewWorkflow("workflowname", 8, 0)
 
   expectedWfName := "workflowname"
   if wf.name != expectedWfName {
@@ -14,7 +14,7 @@ func TestSetWfName(t *testing.T) {
 }
 
 func newDoubleEcho() (*Workflow, error) {
-  n := NewWorkflow()
+  n := NewWorkflow("new", 8, 0)
   // Process
   e1 := new(echo)
   e2 := new(echo)
