@@ -19,10 +19,10 @@ func newDoubleAddOneEcho() (*Workflow, error) {
   e1 := NewProcess("e1", new(echo))
   e2 := NewProcess("e2", new(echo))
 
-  if err := n.Add(e1); err != nil {
+  if err := n.Add("e1", *e1); err != nil {
     return nil, err
   }
-  if err := n.Add(e2); err != nil {
+  if err := n.Add("e2", *e2); err != nil {
     return nil, err
   }
   if err := n.Connect("e1", "Out", "e2", "In"); err != nil {
@@ -39,17 +39,7 @@ func newDoubleAddOneEcho() (*Workflow, error) {
   return n, nil
 }
 
-func TestSimpleWorkflow(t *testing.T) {
-  n, err := newDoubleAddOneEcho()
-  if err != nil {
-    t.Error(err)
-    return
-  }
-
-  testWorkflowWithNumberSequence(n, t)
-}
-
-func testWorkflowWithNumberSequence(n *Workflow, t *testing.T) {
+func testWorkflowWithNumberSequence(t *testing.T) {
   tests := []struct {
     in int
     expected int
@@ -61,7 +51,13 @@ func testWorkflowWithNumberSequence(n *Workflow, t *testing.T) {
     {35, 37},
   }
 
-  for _, t := range tests {
+  for _, test := range tests {
+    n, err := newDoubleAddOneEcho()
+    if err != nil {
+      t.Error(err)
+      return
+    }
+    
     in := make(chan int)
     out := make(chan int)
     n.SetInPort("netIn", in)
@@ -69,7 +65,7 @@ func testWorkflowWithNumberSequence(n *Workflow, t *testing.T) {
 
     wait := n.Run()
 
-    in <- t.in
+    in <- test.in
     if got := <-out; got != test.expected {
       t.Errorf("%d + 2 != %d", test.in, test.expected)
     }

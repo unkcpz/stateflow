@@ -10,6 +10,10 @@ type Tasker interface {
   Execute()
 }
 
+type Processer interface{
+  Run() Wait
+}
+
 type Process struct {
   Name string
   task  Tasker

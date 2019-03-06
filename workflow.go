@@ -12,7 +12,7 @@ type Workflow struct {
   capacity int
   bufferSize int
   waitGrp *sync.WaitGroup
-  procs map[string]Tasker
+  procs map[string]Process
   inPorts map[string]port
   outPorts map[string]port
   connections []connection
@@ -55,12 +55,12 @@ func (n *Workflow) Add(name string, proc Process) error {
   return nil
 }
 
-func (n *Workflow) Connect(senderName, senderPort, receiverName, receiverPort string) error {
-  return n.ConnectBuf(senderName, senderPort, receiverName, receiverPort, n.bufferSize)
-}
+// func (n *Workflow) Connect(senderName, senderPort, receiverName, receiverPort string) error {
+//   return n.ConnectBuf(senderName, senderPort, receiverName, receiverPort, n.bufferSize)
+// }
 
 // Connect connects a sender to a receiver and creates a channel between them
-func (n *Workflow) ConnectBuf(senderName, senderPort, receiverName, receiverPort string, bufferSize int) error {
+func (n *Workflow) Connect(senderName, senderPort, receiverName, receiverPort string) error {
   senderPortVal, err := n.getProcPort(senderName, senderPort, reflect.SendDir)
   if err != nil {
     return err
@@ -72,17 +72,13 @@ func (n *Workflow) ConnectBuf(senderName, senderPort, receiverName, receiverPort
   }
 
   var ips reflect.Value
-  // if !receiverPortVal.IsNil() {
-  //   // Find existing channel attached to the receiver
-  //   channel =
-  // }
 
   sndPortType := senderPortVal.Type()
   // Create a new channel if none of the existing channels found
   if !ips.IsValid() {
     // Make a channel of an appropriate type
     chanType := reflect.ChanOf(reflect.BothDir, sndPortType.Elem())
-    ips = reflect.MakeChan(chanType, bufferSize)
+    ips = reflect.MakeChan(chanType, 0)
   }
   // Set the channels
   if senderPortVal.IsNil() {
@@ -103,14 +99,15 @@ func (n *Workflow) ConnectBuf(senderName, senderPort, receiverName, receiverPort
 
 func (n *Workflow) getProcPort(procName, portName string, dir reflect.ChanDir) (reflect.Value, error) {
   nilValue := reflect.ValueOf(nil)
-  // Ensure Task exists
+  // Ensure Process exists
   proc, ok := n.procs[procName]
+  task := proc.task
   if !ok {
     return nilValue, fmt.Errorf("Connect error: Task '%s' not found", procName)
   }
 
   // Ensure sender is settable
-  val := reflect.ValueOf(proc)
+  val := reflect.ValueOf(task)
   if val.Kind() == reflect.Ptr && val.IsValid() {
     val = val.Elem()
   }
@@ -135,19 +132,30 @@ func (n *Workflow) getProcPort(procName, portName string, dir reflect.ChanDir) (
 func (n *Workflow) Execute() {
   for _, p := range n.procs {
     n.waitGrp.Add(1)
-    wait := Run(p)
-    proc := p
+    wait := p.Run()
     go func() {
       defer n.waitGrp.Done()
       <-wait
-      n.closeProcOuts(proc)
+      n.closeProcOuts(p)
     }()
   }
   n.waitGrp.Wait()
 }
 
-func (n *Workflow) closeProcOuts(proc Tasker) {
-  val := reflect.ValueOf(proc).Elem()
+func (n *Workflow) Run() Wait {
+	wait := make(Wait)
+	go func() {
+		// fmt.Printf("%s | Running %s\n", timeStamp(), p.Name)
+		n.Execute()
+
+		wait <- Done{}
+		// fmt.Printf("%s | %s Finished\n", timeStamp(), p.Name)
+	}()
+	return wait
+}
+
+func (n *Workflow) closeProcOuts(proc Process) {
+  val := reflect.ValueOf(proc.task).Elem()
   for i := 0; i < val.NumField(); i++ {
     field := val.Field(i)
     fieldType := field.Type()
@@ -178,7 +186,7 @@ func (n *Workflow) MapInPort(name, procName, procPort string) error {
   var ips reflect.Value
   var err error
   if _, found := n.procs[procName]; !found {
-    return fmt.Errorf("Could not map inport: Task '%s' not found", procName)
+    return fmt.Errorf("Could not map inport: Proc '%s' not found", procName)
   }
   ips, err = n.getProcPort(procName, procPort, reflect.RecvDir)
   if err != nil {
@@ -192,7 +200,7 @@ func (n *Workflow) MapOutPort(name, procName, procPort string) error {
   var ips reflect.Value
   var err error
   if _, found := n.procs[procName]; !found {
-    return fmt.Errorf("Could not map outport: Task '%s' not found", procName)
+    return fmt.Errorf("Could not map outport: Proc '%s' not found", procName)
   }
   ips, err = n.getProcPort(procName, procPort, reflect.SendDir)
   if err != nil {
