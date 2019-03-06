@@ -1,29 +1,33 @@
 package giida
 
+import (
+  "fmt"
+)
+
 // Tasker is a unit run a Execute
 type Tasker interface {
   Execute()
 }
 
-// Done notifies that the Execute is finished
-type Done struct{}
-
-// Signal is a channel signalling of a completion
-type Wait chan struct{}
-
-// Run the Tasker with Execute() function
-func Run(c Tasker) Wait {
-  wait := make(Wait)
-  go func() {
-    c.Execute()
-    wait <- Done{}
-  }()
-  return wait
-}
-
 type Process struct {
   Name string
-  Task  Tasker
+  task  Tasker
+}
+
+func NewProcess(name string, task Tasker) *Process {
+  p := &Process{
+    Name: name,
+    task: task,
+  }
+  return p
+}
+
+func (p *Process) Run() {
+  t := p.task
+  go func() {
+    t.Execute()
+    fmt.Print("!!!!")
+  }()
 }
 
 // type InputGuard struct {
