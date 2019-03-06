@@ -41,7 +41,7 @@ func NewWorkflow(name string, maxGoroutineTasks, bufferSize int) *Workflow {
     capacity: maxGoroutineTasks,
     bufferSize: bufferSize,
     waitGrp:  new(sync.WaitGroup),
-    procs:  make(map[string]Tasker, maxGoroutineTasks),
+    procs:  make(map[string]Process, maxGoroutineTasks),
     inPorts:  make(map[string]port, maxGoroutineTasks),
     outPorts: make(map[string]port, maxGoroutineTasks),
     connections:  make([]connection, 0, maxGoroutineTasks),
@@ -50,7 +50,7 @@ func NewWorkflow(name string, maxGoroutineTasks, bufferSize int) *Workflow {
 }
 
 // Add adds a new Task with a given name to the network.
-func (n *Workflow) Add(name string, proc Tasker) error {
+func (n *Workflow) Add(name string, proc Process) error {
   n.procs[name] = proc
   return nil
 }

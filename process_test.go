@@ -3,7 +3,7 @@ package giida
 import (
   "fmt"
   "testing"
-  "time"
+  // "time"
 )
 
 type doubleOnce struct {
@@ -13,7 +13,7 @@ type doubleOnce struct {
 
 func (proc *doubleOnce) Execute() {
   i := <-proc.In
-  time.Sleep(2 * time.Second)
+  // time.Sleep(1 * time.Second)
   proc.Out <- 2 * i
 }
 
@@ -46,39 +46,41 @@ func TestSimpleMultiTask(t *testing.T) {
   }
 }
 
-// func TestTaskWithTwoInputs(t *testing.T) {
-//   tests := []struct {
-//     x int
-//     y int
-//     sum int
-//   }{
-//     {3, 38, 41},
-//     {3, 4, 7},
-//     {92, 4, 96},
-//     {-1, 1, 0},
-//   }
-//
-//   for _, test := range tests {
-//     x := make(chan int)
-//     y := make(chan int)
-//     sum := make(chan int)
-//
-//     proc := &adder{
-//       x,
-//       y,
-//       sum,
-//     }
-//
-//     Run(proc)
-//
-//     x <- test.x
-//     y <- test.y
-//     got := <-sum
-//     if got != test.sum {
-//       t.Errorf("%d + %d != %d", test.x, test.y, test.sum)
-//     }
-//   }
-// }
+func TestTaskWithTwoInputs(t *testing.T) {
+  tests := []struct {
+    x int
+    y int
+    sum int
+  }{
+    {3, 38, 41},
+    {3, 4, 7},
+    {92, 4, 96},
+    {-1, 1, 0},
+  }
+
+  for _, test := range tests {
+    x := make(chan int)
+    y := make(chan int)
+    sum := make(chan int)
+
+    task := new(adder)
+    task.X = x
+    task.Y = y
+    task.Sum = sum
+
+    proc := NewProcess("add", task)
+
+    wait := proc.Run()
+
+    x <- test.x
+    y <- test.y
+    got := <-sum
+    if got != test.sum {
+      t.Errorf("%d + %d != %d", test.x, test.y, test.sum)
+    }
+    <-wait
+  }
+}
 
 type adder struct {
   X <-chan int

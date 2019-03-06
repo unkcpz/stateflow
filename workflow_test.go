@@ -16,13 +16,13 @@ func TestSetWfName(t *testing.T) {
 func newDoubleAddOneEcho() (*Workflow, error) {
   n := NewWorkflow("new", 8, 0)
   // Task
-  e1 := new(echo)
-  e2 := new(echo)
+  e1 := NewProcess("e1", new(echo))
+  e2 := NewProcess("e2", new(echo))
 
-  if err := n.Add("e1", e1); err != nil {
+  if err := n.Add(e1); err != nil {
     return nil, err
   }
-  if err := n.Add("e2", e2); err != nil {
+  if err := n.Add(e2); err != nil {
     return nil, err
   }
   if err := n.Connect("e1", "Out", "e2", "In"); err != nil {
@@ -61,30 +61,20 @@ func testWorkflowWithNumberSequence(n *Workflow, t *testing.T) {
     {35, 37},
   }
 
-  in := make(chan int)
-  out := make(chan int)
-  n.SetInPort("netIn", in)
-  n.SetOutPort("netOut", out)
+  for _, t := range tests {
+    in := make(chan int)
+    out := make(chan int)
+    n.SetInPort("netIn", in)
+    n.SetOutPort("netOut", out)
 
-  wait := Run(n)
+    wait := n.Run()
 
-  go func() {
-    for _, t := range tests {
-      in <- t.in
+    in <- t.in
+    if got := <-out; got != test.expected {
+      t.Errorf("%d + 2 != %d", test.in, test.expected)
     }
-    close(in)
-  }()
-
-  i := 0
-  for got := range out {
-    expected := tests[i].expected
-    if got != expected {
-      t.Errorf("%d + 2 != %d\n", tests[i].in, tests[i].expected)
-    }
-    i++
+    <-wait
   }
-
-  <-wait
 }
 
 // Task for test
@@ -94,7 +84,6 @@ type echo struct {
 }
 
 func (c *echo) Execute() {
-  for i := range c.In {
-    c.Out <- i + 1
-  }
+  in := <-c.In
+  c.Out <- in + 1
 }

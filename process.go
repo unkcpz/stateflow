@@ -33,11 +33,11 @@ func (p *Process) Run() Wait {
 	t := p.task
 	wait := make(Wait)
 	go func() {
-		fmt.Printf("%s | Running %s\n", timeStamp(), p.Name)
+		// fmt.Printf("%s | Running %s\n", timeStamp(), p.Name)
 		t.Execute()
 
 		wait <- Done{}
-		fmt.Printf("%s | %s Finished\n", timeStamp(), p.Name)
+		// fmt.Printf("%s | %s Finished\n", timeStamp(), p.Name)
 	}()
 	return wait
 }
