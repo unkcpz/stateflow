@@ -50,8 +50,9 @@ func NewWorkflow(name string, maxGoroutineTasks, bufferSize int) *Workflow {
 }
 
 // Add adds a new Task with a given name to the network.
-func (n *Workflow) Add(name string, proc Process) error {
-  n.procs[name] = proc
+func (n *Workflow) Add(proc *Process) error {
+	name := proc.Name
+  n.procs[name] = *proc
   return nil
 }
 
