@@ -3,6 +3,7 @@ package giida
 import (
   "fmt"
   "testing"
+  "time"
 )
 
 type doubleOnce struct {
@@ -12,6 +13,7 @@ type doubleOnce struct {
 
 func (proc *doubleOnce) Execute() {
   i := <-proc.In
+  time.Sleep(2 * time.Second)
   proc.Out <- 2 * i
 }
 
@@ -35,11 +37,12 @@ func TestSimpleMultiTask(t *testing.T) {
 
     name := fmt.Sprintf("doubler%d", i)
     proc := NewProcess(name, task)
-    proc.Run()
+    wait := proc.Run()
     in <- test.in
     if got := <-out; got != test.expected {
       t.Errorf("%d * 2 != %d", test.in, got)
     }
+    <-wait
   }
 }
 

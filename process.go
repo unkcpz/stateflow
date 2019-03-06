@@ -2,6 +2,7 @@ package giida
 
 import (
   "fmt"
+	"time"
 )
 
 // Tasker is a unit run a Execute
@@ -22,12 +23,28 @@ func NewProcess(name string, task Tasker) *Process {
   return p
 }
 
-func (p *Process) Run() {
-  t := p.task
-  go func() {
-    t.Execute()
-    fmt.Print("!!!!")
-  }()
+// Done notifies that the process is finished
+type Done struct{}
+
+// Wait is a channel signalling of a completion
+type Wait chan struct{}
+
+func (p *Process) Run() Wait {
+	t := p.task
+	wait := make(Wait)
+	go func() {
+		fmt.Printf("%s | Running %s\n", timeStamp(), p.Name)
+		t.Execute()
+
+		wait <- Done{}
+		fmt.Printf("%s | %s Finished\n", timeStamp(), p.Name)
+	}()
+	return wait
+}
+
+func timeStamp() string {
+	t := time.Now()
+	return fmt.Sprintf(t.Format("2006/01-02/15:04:05"))
 }
 
 // type InputGuard struct {
