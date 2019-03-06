@@ -5,13 +5,6 @@ type Tasker interface {
   Execute()
 }
 
-// type Process struct {
-//   Name string
-//   ID  int
-//   State   ENUM
-//   Task  Tasker
-// }
-
 // Done notifies that the Execute is finished
 type Done struct{}
 
@@ -28,25 +21,30 @@ func Run(c Tasker) Wait {
   return wait
 }
 
-type InputGuard struct {
-  ports map[string]bool
-  complete int
+type Process struct {
+  Name string
+  Task  Tasker
 }
 
+// type InputGuard struct {
+//   ports map[string]bool
+//   complete int
+// }
 //
-func NewInputGuard(ports ...string) *InputGuard {
-  portMap := make(map[string]bool, len(ports))
-  for _, p := range ports {
-    portMap[p] = false
-  }
-  return &InputGuard{portMap, 0}
-}
-
-// Complete is called when a port is closed and returns true when all the ports have been closed
-func (g *InputGuard) Complete(port string) bool {
-  if !g.ports[port] {
-    g.ports[port] = true
-    g.complete++
-  }
-  return g.complete >= len(g.ports)
-}
+// //
+// func NewInputGuard(ports ...string) *InputGuard {
+//   portMap := make(map[string]bool, len(ports))
+//   for _, p := range ports {
+//     portMap[p] = false
+//   }
+//   return &InputGuard{portMap, 0}
+// }
+//
+// // Complete is called when a port is closed and returns true when all the ports have been closed
+// func (g *InputGuard) Complete(port string) bool {
+//   if !g.ports[port] {
+//     g.ports[port] = true
+//     g.complete++
+//   }
+//   return g.complete >= len(g.ports)
+// }
