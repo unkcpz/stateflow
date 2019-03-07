@@ -79,15 +79,8 @@ func (n *Workflow) Connect(senderName, senderPort, receiverName, receiverPort st
   if !ips.IsValid() {
     // Make a channel of an appropriate type
     chanType := reflect.ChanOf(reflect.BothDir, sndPortType.Elem())
-<<<<<<< HEAD
-		fmt.Println("!!!")
     ips = reflect.MakeChan(chanType, 0)
-=======
-    ips = reflect.MakeChan(chanType, 2)
->>>>>>> bug-fix
   }
-  // chanType := reflect.ChanOf(reflect.BothDir, sndPortType.Elem())
-	fmt.Println("!!!")
   // Set the channels
   if senderPortVal.IsNil() {
     senderPortVal.Set(ips)

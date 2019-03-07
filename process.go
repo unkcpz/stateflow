@@ -3,6 +3,7 @@ package giida
 import (
   "fmt"
 	"time"
+	"reflect"
 )
 
 // Tasker is a unit run a Execute
@@ -25,20 +26,27 @@ func NewProcess(name string, task Tasker) *Process {
     Name: name,
     task: task,
   }
+	portToTask(p)
   return p
 }
 
-// func portToTask(p *Process) err {
-// 	// Set value to task's fields
-// 	t = p.task
-// 	val := reflect.ValueOf(p.task).Elem()
-// 	for i := 0; i < val.NumField(); i++ {
-// 		field := val.Field(i)
-// 		fieldType := field.Type()
-// 		fieldName := filed.Name
-// 		p.Ports[fieldName] =
-// 	}
-// }
+func portToTask(p *Process) {
+	// Set value to task's fields
+	// vals := reflect.ValueOf(p.task)
+	val := reflect.ValueOf(p.task).Elem()
+	// fmt.Println(vals.Type())
+	for i := 0; i < val.NumField(); i++ {
+		// field := val.Field(i)
+
+		// fmt.Println(val.Type().Field(i).Name)
+		fieldType := val.Field(i).Type()
+		fieldName := val.Type().Field(i).Name
+		fmt.Println(fieldName)
+		fmt.Println(fieldType)
+		// p.Ports[fieldName] = reflect.MakeChan(fieldType, 0)
+	}
+	fmt.Println(p.Ports)
+}
 
 // Done notifies that the process is finished
 type Done struct{}
