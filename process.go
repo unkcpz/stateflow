@@ -28,6 +28,18 @@ func NewProcess(name string, task Tasker) *Process {
   return p
 }
 
+// func portToTask(p *Process) err {
+// 	// Set value to task's fields
+// 	t = p.task
+// 	val := reflect.ValueOf(p.task).Elem()
+// 	for i := 0; i < val.NumField(); i++ {
+// 		field := val.Field(i)
+// 		fieldType := field.Type()
+// 		fieldName := filed.Name
+// 		p.Ports[fieldName] =
+// 	}
+// }
+
 // Done notifies that the process is finished
 type Done struct{}
 

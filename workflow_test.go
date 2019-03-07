@@ -39,7 +39,7 @@ func newDoubleAddOneEcho() (*Workflow, error) {
   return n, nil
 }
 
-func testWorkflowWithNumberSequence(t *testing.T) {
+func TestWorkflowWithNumberSequence(t *testing.T) {
   tests := []struct {
     in int
     expected int
