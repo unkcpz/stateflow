@@ -19,10 +19,10 @@ func newDoubleAddOneEcho() (*Workflow, error) {
   e1 := NewProcess("e1", new(echo))
   e2 := NewProcess("e2", new(echo))
 
-  if err := n.Add("e1", *e1); err != nil {
+  if err := n.Add(e1); err != nil {
     return nil, err
   }
-  if err := n.Add("e2", *e2); err != nil {
+  if err := n.Add(e2); err != nil {
     return nil, err
   }
   if err := n.Connect("e1", "Out", "e2", "In"); err != nil {
@@ -39,7 +39,7 @@ func newDoubleAddOneEcho() (*Workflow, error) {
   return n, nil
 }
 
-func testWorkflowWithNumberSequence(t *testing.T) {
+func TestWorkflowWithNumberSequence(t *testing.T) {
   tests := []struct {
     in int
     expected int
@@ -57,7 +57,7 @@ func testWorkflowWithNumberSequence(t *testing.T) {
       t.Error(err)
       return
     }
-    
+
     in := make(chan int)
     out := make(chan int)
     n.SetInPort("netIn", in)

@@ -17,6 +17,7 @@ type Processer interface{
 type Process struct {
   Name string
   task  Tasker
+	Ports map[string]chan int
 }
 
 func NewProcess(name string, task Tasker) *Process {

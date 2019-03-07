@@ -50,8 +50,9 @@ func NewWorkflow(name string, maxGoroutineTasks, bufferSize int) *Workflow {
 }
 
 // Add adds a new Task with a given name to the network.
-func (n *Workflow) Add(name string, proc Process) error {
-  n.procs[name] = proc
+func (n *Workflow) Add(proc *Process) error {
+	name := proc.Name
+	n.procs[name] = *proc
   return nil
 }
 
@@ -78,7 +79,7 @@ func (n *Workflow) Connect(senderName, senderPort, receiverName, receiverPort st
   if !ips.IsValid() {
     // Make a channel of an appropriate type
     chanType := reflect.ChanOf(reflect.BothDir, sndPortType.Elem())
-    ips = reflect.MakeChan(chanType, 0)
+    ips = reflect.MakeChan(chanType, 2)
   }
   // Set the channels
   if senderPortVal.IsNil() {
@@ -136,7 +137,8 @@ func (n *Workflow) Execute() {
     go func() {
       defer n.waitGrp.Done()
       <-wait
-      n.closeProcOuts(p)
+			// p channel already closed
+      // n.closeProcOuts(p)
     }()
   }
   n.waitGrp.Wait()
@@ -154,18 +156,18 @@ func (n *Workflow) Run() Wait {
 	return wait
 }
 
-func (n *Workflow) closeProcOuts(proc Process) {
-  val := reflect.ValueOf(proc.task).Elem()
-  for i := 0; i < val.NumField(); i++ {
-    field := val.Field(i)
-    fieldType := field.Type()
-    if !(field.IsValid() && field.Kind() == reflect.Chan && field.CanSet() &&
-      fieldType.ChanDir()&reflect.SendDir != 0 && fieldType.ChanDir()&reflect.RecvDir == 0) {
-        continue
-    }
-    field.Close()
-  }
-}
+// func (n *Workflow) closeProcOuts(proc Process) {
+//   val := reflect.ValueOf(proc.task).Elem()
+//   for i := 0; i < val.NumField(); i++ {
+//     field := val.Field(i)
+//     fieldType := field.Type()
+//     if !(field.IsValid() && field.Kind() == reflect.Chan && field.CanSet() &&
+//       fieldType.ChanDir()&reflect.SendDir != 0 && fieldType.ChanDir()&reflect.RecvDir == 0) {
+//         continue
+//     }
+//     // field.Close()
+//   }
+// }
 
 func (n *Workflow) getInPort(name string) (reflect.Value, error) {
   if pName, ok := n.inPorts[name]; ok {
