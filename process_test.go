@@ -11,10 +11,10 @@ type doubleOnce struct {
   Out chan<- int
 }
 
-func (proc *doubleOnce) Execute() {
-  i := <-proc.In
+func (t *doubleOnce) Execute() {
+  i := <-t.In
   // time.Sleep(1 * time.Second)
-  proc.Out <- 2 * i
+  t.Out <- 2 * i
 }
 
 // Test a simple task with multi inputs
@@ -38,8 +38,6 @@ func TestSimpleMultiTask(t *testing.T) {
 
     proc.In("In", in)
     proc.Out("Out", out)
-    fmt.Println(task.In, proc.Ports["In"])
-    fmt.Println(task.Out, proc.Ports["Out"])
     // proc.In("In", test.in)
     wait := proc.Run()
     in <- test.in
@@ -92,10 +90,10 @@ type adder struct {
   Sum chan<- int
 }
 
-func (p *adder) Execute() {
-  x := <-p.X
-  y := <-p.Y
-  p.Sum <- x + y
+func (t *adder) Execute() {
+  x := <-t.X
+  y := <-t.Y
+  t.Sum <- x + y
 }
 
 // // Test a simple long running Task with one input

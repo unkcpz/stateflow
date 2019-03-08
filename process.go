@@ -38,7 +38,6 @@ func mapPort(p *Process) {
 		fieldName := val.Type().Field(i).Name
 		p.Ports[fieldName] = val.FieldByName(fieldName)
 	}
-	fmt.Println(p.Ports)
 }
 
 func (p *Process) In(portName string, v interface{}) {
