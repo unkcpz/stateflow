@@ -18,34 +18,35 @@ type Processer interface{
 type Process struct {
   Name string
   task  Tasker
-	Ports map[string]chan int
+	Ports map[string]reflect.Value
 }
 
 func NewProcess(name string, task Tasker) *Process {
   p := &Process{
     Name: name,
     task: task,
+		Ports: make(map[string]reflect.Value),
   }
-	portToTask(p)
+	mapPort(p)
   return p
 }
 
-func portToTask(p *Process) {
+func mapPort(p *Process) {
 	// Set value to task's fields
-	// vals := reflect.ValueOf(p.task)
 	val := reflect.ValueOf(p.task).Elem()
-	// fmt.Println(vals.Type())
 	for i := 0; i < val.NumField(); i++ {
-		// field := val.Field(i)
-
-		// fmt.Println(val.Type().Field(i).Name)
-		fieldType := val.Field(i).Type()
 		fieldName := val.Type().Field(i).Name
-		fmt.Println(fieldName)
-		fmt.Println(fieldType)
-		// p.Ports[fieldName] = reflect.MakeChan(fieldType, 0)
+		p.Ports[fieldName] = val.FieldByName(fieldName)
 	}
 	fmt.Println(p.Ports)
+}
+
+func (p *Process) In(portName string, v interface{}) {
+	p.Ports[portName].Set(reflect.ValueOf(v))
+}
+
+func (p *Process) Out(portName string, v interface{}) {
+	p.Ports[portName].Set(reflect.ValueOf(v))
 }
 
 // Done notifies that the process is finished

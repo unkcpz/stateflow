@@ -30,21 +30,20 @@ func TestSimpleMultiTask(t *testing.T) {
 
   for i, test := range tests {
     task := new(doubleOnce)
+    in := make(chan int)
+    out := make(chan int)
 
     name := fmt.Sprintf("doubler%d", i)
-    proc := &Process{
-      Name: name,
-      task: task,
-      Ports: map[string]chan int {
-        "In": make(chan int),
-        "Out": make(chan int),
-      },
-    }
-    task.In = proc.Ports["In"]
-    task.Out = proc.Ports["Out"]
+    proc := NewProcess(name, task)
+
+    proc.In("In", in)
+    proc.Out("Out", out)
+    fmt.Println(task.In, proc.Ports["In"])
+    fmt.Println(task.Out, proc.Ports["Out"])
+    // proc.In("In", test.in)
     wait := proc.Run()
-    proc.Ports["In"] <- test.in
-    if got := <-proc.Ports["Out"]; got != test.expected {
+    in <- test.in
+    if got := <-out; got != test.expected {
       t.Errorf("%d * 2 != %d", test.in, got)
     }
     <-wait
