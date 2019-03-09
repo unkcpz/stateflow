@@ -30,11 +30,11 @@ func TestSimpleMultiTask(t *testing.T) {
 
   for i, test := range tests {
     task := new(doubleOnce)
-    out := make(chan int)
 
     name := fmt.Sprintf("doubler%d", i)
     proc := NewProcess(name, task)
 
+    out := make(chan int)
     proc.Out("Out", out)
     proc.In("In", test.in)
 

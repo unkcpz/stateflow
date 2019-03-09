@@ -18,20 +18,20 @@ type Processer interface{
 type Process struct {
   Name string
   task  Tasker
-	InPorts map[string]reflect.Value
-	OutPorts map[string]reflect.Value
+	inPorts map[string]reflect.Value
 	inPool map[string]reflect.Value
 	inChannel map[string]reflect.Value
+	outPorts map[string]reflect.Value
 }
 
 func NewProcess(name string, task Tasker) *Process {
   p := &Process{
     Name: name,
     task: task,
-		InPorts: make(map[string]reflect.Value),
-		OutPorts: make(map[string]reflect.Value),
+		inPorts: make(map[string]reflect.Value),
 		inPool: make(map[string]reflect.Value),
 		inChannel: make(map[string]reflect.Value),
+		outPorts: make(map[string]reflect.Value),
   }
 	mapPort(p)
   return p
@@ -45,10 +45,10 @@ func mapPort(p *Process) {
 		fieldType := field.Type()
 		fieldName := val.Type().Field(i).Name
 		if fieldType.ChanDir() == reflect.RecvDir {
-			p.InPorts[fieldName] = val.FieldByName(fieldName)
+			p.inPorts[fieldName] = val.FieldByName(fieldName)
 		}
 		if fieldType.ChanDir() == reflect.SendDir {
-			p.OutPorts[fieldName] = val.FieldByName(fieldName)
+			p.outPorts[fieldName] = val.FieldByName(fieldName)
 		}
 	}
 }
@@ -59,11 +59,11 @@ func (p *Process) In(portName string, v interface{}) {
   chanType := reflect.ChanOf(reflect.BothDir, reflect.TypeOf(v))
   p.inChannel[portName] = reflect.MakeChan(chanType, 0)
 
-	p.InPorts[portName].Set(p.inChannel[portName])
+	p.inPorts[portName].Set(p.inChannel[portName])
 }
 
 func (p *Process) Out(portName string, v interface{}) {
-	p.OutPorts[portName].Set(reflect.ValueOf(v))
+	p.outPorts[portName].Set(reflect.ValueOf(v))
 }
 
 // Done notifies that the process is finished
