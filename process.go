@@ -20,6 +20,8 @@ type Process struct {
   task  Tasker
 	InPorts map[string]reflect.Value
 	OutPorts map[string]reflect.Value
+	inPool map[string]reflect.Value
+	inChannel map[string]reflect.Value
 }
 
 func NewProcess(name string, task Tasker) *Process {
@@ -28,6 +30,8 @@ func NewProcess(name string, task Tasker) *Process {
     task: task,
 		InPorts: make(map[string]reflect.Value),
 		OutPorts: make(map[string]reflect.Value),
+		inPool: make(map[string]reflect.Value),
+		inChannel: make(map[string]reflect.Value),
   }
 	mapPort(p)
   return p
@@ -50,7 +54,12 @@ func mapPort(p *Process) {
 }
 
 func (p *Process) In(portName string, v interface{}) {
-	p.InPorts[portName].Set(reflect.ValueOf(v))
+	p.inPool[portName] = reflect.ValueOf(v)
+	// fmt.Println(reflect.TypeOf(v).ChanDir())
+  chanType := reflect.ChanOf(reflect.BothDir, reflect.TypeOf(v))
+  p.inChannel[portName] = reflect.MakeChan(chanType, 0)
+
+	p.InPorts[portName].Set(p.inChannel[portName])
 }
 
 func (p *Process) Out(portName string, v interface{}) {
@@ -73,6 +82,9 @@ func (p *Process) Run() Wait {
 		wait <- Done{}
 		// fmt.Printf("%s | %s Finished\n", timeStamp(), p.Name)
 	}()
+	for k, v := range p.inPool {
+		p.inChannel[k].Send(v)
+	}
 	return wait
 }
 
