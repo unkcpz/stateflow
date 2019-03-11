@@ -43,3 +43,44 @@ func TestProcess(t *testing.T) {
     }
   }
 }
+
+type Adder struct {
+  X int
+  Y int
+  Sum int
+}
+
+func (t *Adder) Execute() {
+  t.Sum = t.X + t.Y
+}
+
+func TestProcessWithTwoInputs(t *testing.T) {
+  tests := []struct {
+    a int
+    b int
+    sum int
+  }{
+    {1, 2, 3},
+    {-1, 1, 0},
+  }
+
+  for _, test := range tests {
+    proc := NewProcess("adder", new(Adder))
+
+    x := make(chan int)
+    y := make(chan int)
+    sum := make(chan interface{})
+    proc.SetIn("X", x)
+    proc.SetIn("Y", y)
+    proc.SetOut("Sum", sum)
+
+    proc.Run()
+    x <- test.a
+    y <- test.b
+
+    got := <-sum
+    if got !=test.sum {
+      t.Errorf("%d + %d == %d", test.a, test.b, got)
+    }
+  }
+}
