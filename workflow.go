@@ -1,13 +1,19 @@
 package giida
 
+import (
+  // "reflect"
+  // "fmt"
+)
+
 type Workflow struct {
   Name string
   proc map[string]*Process
 }
 
-func NewWorkflow(name string) {
+func NewWorkflow(name string) *Workflow {
   wf := &Workflow{
     Name: name,
+    proc: make(map[string]*Process),
   }
   return wf
 }
@@ -17,18 +23,42 @@ func (w *Workflow) Add(p *Process) {
 }
 
 func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
-  // get value from send port
   s := w.proc[sendProc]
-  ch := s.outPorts[sendPort]
-  val := reflect.ValueOf(ch)
-
-
   r := w.proc[recvProc]
-  r.SetIn(recvPort, channel)
+  out := make(chan interface{})
+  // val := reflect.ValueOf(r.task).Elem()
+  // fmt.Println("!!!")
+  // fmt.Println(reflect.ValueOf(val.FieldByName(recvPort)))
+
+  // fmt.Println("!!!")
+  // chanType := reflect.ChanOf(reflect.BothDir, reflect.TypeOf(val.FieldByName(recvPort)))
+  // // chanType := reflect.ChanOf(reflect.BothDir, reflect.TypeOf(reflect.ValueOf(1)))
+  // in := reflect.MakeChan(chanType, 0)
+  in := make(chan int)
+
+  s.SetOut(sendPort, out)
+  r.SetIn(recvPort, in)
+
+  go func() {
+    v := <-out
+    // fmt.Println(<-out)
+    // in.Send(v)
+    in <- v.(int)
+  }()
 }
 
 func (w *Workflow) SetIn(procName, portName string, channel interface{}) {
-
+  p := w.proc[procName]
+  p.inPorts[portName] = channel
 }
 
-func (w *Workflow) SetOut(procName, portName string, channel chan interface{})
+func (w *Workflow) SetOut(procName, portName string, channel chan interface{}) {
+  p := w.proc[procName]
+  p.outPorts[portName] = channel
+}
+
+func (w *Workflow) Run() {
+  for _, p := range w.proc {
+    p.Run()
+  }
+}

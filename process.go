@@ -41,6 +41,7 @@ func (p *Process) Run() {
     val := reflect.ValueOf(task).Elem()
     for name, ch := range p.inPorts {
       chv := reflect.ValueOf(ch)
+      // fmt.Printf("%v", reflect.ValueOf(chv.Field(2)))
       v, ok := chv.Recv()
       if !ok {
         log.Fatalln("channel is closed after one data input.")

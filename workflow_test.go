@@ -1,6 +1,7 @@
 package giida
 
 import (
+  "fmt"
   "testing"
 )
 
@@ -37,6 +38,7 @@ func TestSimpleWorkflow(t *testing.T) {
     wf.SetIn("p1", "In", in)
     wf.SetOut("p2", "Out", out)
 
+    fmt.Println("!!!")
     wf.Run()
     in <- test.in
 
