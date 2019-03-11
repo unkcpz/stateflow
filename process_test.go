@@ -1,138 +1,86 @@
 package giida
 
 import (
-  "fmt"
   "testing"
-  // "time"
+  "fmt"
 )
 
-type doubleOnce struct {
-  In <-chan int
-  Out chan<- int
+type Demo struct {
+  In int
+  Out string
 }
 
-func (t *doubleOnce) Execute() {
-  i := <-t.In
-  // time.Sleep(1 * time.Second)
-  t.Out <- 2 * i
+func (t *Demo) Execute() {
+  i := t.In
+  t.Out = fmt.Sprintf("%d", i+1)
 }
 
-// Test a simple task with multi inputs
-func TestSimpleMultiTask(t *testing.T) {
-  tests := []struct {
+func TestProcess(t *testing.T) {
+  tests := []struct{
     in int
-    expected int
+    expected string
   }{
-    {12, 24},
-    {5, 10},
-    {0, 0},
+    {5, "6"},
+    {10, "11"},
+    {-1, "0"},
+    {3, "4"},
   }
 
-  for i, test := range tests {
-    task := new(doubleOnce)
+  for _, test := range tests {
+    proc := NewProcess("test", new(Demo))
 
-    name := fmt.Sprintf("doubler%d", i)
-    proc := NewProcess(name, task)
+    in := make(chan int)
+    out := make(chan interface{})
+    proc.SetIn("In", in)
+    proc.SetOut("Out", out)
 
-    out := make(chan int)
-    proc.Out("Out", out)
-    proc.In("In", test.in)
+    proc.Run()
+    in <- test.in
 
-    wait := proc.Run()
-    if got := <-out; got != test.expected {
-      t.Errorf("%d * 2 != %d", test.in, got)
+    got := <-out
+    if got != test.expected {
+      t.Errorf("string(%d+1) = %s, expected %s", test.in, got, test.expected)
     }
-    <-wait
   }
 }
 
-func TestTaskWithTwoInputs(t *testing.T) {
+type Adder struct {
+  X int
+  Y int
+  Sum int
+}
+
+func (t *Adder) Execute() {
+  t.Sum = t.X + t.Y
+}
+
+func TestProcessWithTwoInputs(t *testing.T) {
   tests := []struct {
-    x int
-    y int
+    a int
+    b int
     sum int
   }{
-    {3, 38, 41},
-    {3, 4, 7},
-    {92, 4, 96},
+    {1, 2, 3},
     {-1, 1, 0},
   }
 
   for _, test := range tests {
+    proc := NewProcess("adder", new(Adder))
+
     x := make(chan int)
     y := make(chan int)
-    sum := make(chan int)
+    sum := make(chan interface{})
+    proc.SetIn("X", x)
+    proc.SetIn("Y", y)
+    proc.SetOut("Sum", sum)
 
-    task := new(adder)
-    task.X = x
-    task.Y = y
-    task.Sum = sum
+    proc.Run()
+    x <- test.a
+    y <- test.b
 
-    proc := NewProcess("add", task)
-
-    wait := proc.Run()
-
-    x <- test.x
-    y <- test.y
     got := <-sum
-    if got != test.sum {
-      t.Errorf("%d + %d != %d", test.x, test.y, test.sum)
+    if got !=test.sum {
+      t.Errorf("%d + %d == %d", test.a, test.b, got)
     }
-    <-wait
   }
 }
-
-type adder struct {
-  X <-chan int
-  Y <-chan int
-  Sum chan<- int
-}
-
-func (t *adder) Execute() {
-  x := <-t.X
-  y := <-t.Y
-  t.Sum <- x + y
-}
-
-// // Test a simple long running Task with one input
-// func TestSimpleLongRunningTask(t *testing.T) {
-//   tests := []struct {
-//     in int
-//     expected int
-//   }{
-//     {12, 24},
-//     {5, 10},
-//   }
-//
-//   in := make(chan int)
-//   out := make(chan int)
-//   proc := &doubler{
-//     in,
-//     out,
-//   }
-//
-//   wait := Run(proc)
-//
-//   for _, test := range tests {
-//     in <- test.in
-//     got := <-out
-//
-//     if got != test.expected {
-//       t.Errorf("%d != %d", got, test.expected)
-//     }
-//   }
-//
-//   close(in)
-//   <-wait
-// }
-//
-// type doubler struct {
-//   In <-chan int
-//   Out chan<- int
-// }
-//
-// func (proc *doubler) Execute() {
-//   for i := range proc.In {
-//     proc.Out <- 2 * i
-//   }
-// }
