@@ -4,82 +4,45 @@ import (
   "testing"
 )
 
-func TestSetWfName(t *testing.T) {
-  wf := NewWorkflow("workflowname", 8, 0)
-
-  expectedWfName := "workflowname"
-  if wf.name != expectedWfName {
-    t.Errorf("Workflow name is wrong, got %s, expect %s\n", wf.name, expectedWfName)
-  }
+type PlusOne struct {
+  In int
+  Out int
 }
 
-func newDoubleAddOneEcho() (*Workflow, error) {
-  n := NewWorkflow("new", 8, 0)
-  // Task
-  e1 := NewProcess("e1", new(echo))
-  e2 := NewProcess("e2", new(echo))
-
-  if err := n.Add(e1); err != nil {
-    return nil, err
-  }
-  if err := n.Add(e2); err != nil {
-    return nil, err
-  }
-  if err := n.Connect("e1", "Out", "e2", "In"); err != nil {
-    return nil, err
-  }
-  // Ports
-  if err := n.MapInPort("netIn", "e1", "In"); err != nil {
-    return nil, err
-  }
-  if err := n.MapOutPort("netOut", "e2", "Out"); err != nil {
-    return nil, err
-  }
-
-  return n, nil
+func (t *PlusOne) Execute() {
+  t.Out = t.In + 1
 }
 
-func TestWorkflowWithNumberSequence(t *testing.T) {
+func TestSimpleWorkflow(t *testing.T) {
   tests := []struct {
     in int
-    expected int
-  } {
-    {93, 95},
-    {52, 54},
-    {1, 3},
-    {24, 26},
-    {35, 37},
+    out int
+  }{
+    {0, 2},
+    {-2, 0},
+    {199, 201},
   }
 
   for _, test := range tests {
-    n, err := newDoubleAddOneEcho()
-    if err != nil {
-      t.Error(err)
-      return
-    }
+    p1 := NewProcess("p1", new(PlusOne))
+    p2 := NewProcess("p2", new(PlusOne))
+
+    wf := NewWorkflow("test_wf")
+    wf.Add(p1)
+    wf.Add(p2)
+    wf.Connect("p1", "Out", "p2", "In")
 
     in := make(chan int)
-    out := make(chan int)
-    n.SetInPort("netIn", in)
-    n.SetOutPort("netOut", out)
+    out := make(chan interface{})
+    wf.SetIn("p1", "In", in)
+    wf.SetOut("p2", "Out", out)
 
-    wait := n.Run()
-
+    wf.Run()
     in <- test.in
-    if got := <-out; got != test.expected {
-      t.Errorf("%d + 2 != %d", test.in, test.expected)
+
+    got := <-out
+    if got != test.out {
+      t.Errorf("%d + 2 = %d", test.in, got)
     }
-    <-wait
   }
-}
-
-// Task for test
-type echo struct {
-  In <-chan int
-  Out chan<- int
-}
-
-func (c *echo) Execute() {
-  in := <-c.In
-  c.Out <- in + 1
 }
