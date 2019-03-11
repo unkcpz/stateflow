@@ -28,13 +28,11 @@ func TestProcess(t *testing.T) {
 
   for _, test := range tests {
     proc := NewProcess("test", new(Demo))
-    // proc.BindPort("pIn", "In")
-    // proc.BindPort("pOut", "Out")
 
     in := make(chan int)
-    out := make(chan string)
-    proc.SetIn("pIn", in)
-    proc.SetOut("pOut", out)
+    out := make(chan interface{})
+    proc.SetIn("In", in)
+    proc.SetOut("Out", out)
 
     proc.Run()
     in <- test.in
