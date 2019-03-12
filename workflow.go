@@ -34,7 +34,7 @@ func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
   // chanType := reflect.ChanOf(reflect.BothDir, reflect.TypeOf(val.FieldByName(recvPort)))
   // chanType := reflect.ChanOf(reflect.BothDir, reflect.TypeOf(1))
   // in := reflect.MakeChan(chanType, 0)
-  in := make(chan int)
+  in := make(chan interface{})
 
   s.SetOut(sendPort, out)
   r.SetIn(recvPort, in)
@@ -44,11 +44,11 @@ func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
     // <- out
     // fmt.Println(<-out)
     // in.Send(reflect.ValueOf(1))
-    in <- v.(int)
+    in <- v
   }()
 }
 
-func (w *Workflow) SetIn(procName, portName string, channel interface{}) {
+func (w *Workflow) SetIn(procName, portName string, channel chan interface{}) {
   p := w.proc[procName]
   p.inPorts[portName] = channel
 }

@@ -119,7 +119,7 @@ func TestProcess2Process(t *testing.T) {
     p2.SetIn("In", tmpIn)
     go func(){
       v := <-tmpOut
-      tmpIn <- v.(int)
+      tmpIn <- v
     }()
 
     p1.Run()

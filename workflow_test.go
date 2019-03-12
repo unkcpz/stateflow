@@ -5,12 +5,12 @@ import (
   "testing"
 )
 
-type PlusOne struct {
+type PlusOneWF struct {
   In int
   Out int
 }
 
-func (t *PlusOne) Execute() {
+func (t *PlusOneWF) Execute() {
   t.Out = t.In + 1
 }
 
@@ -25,15 +25,15 @@ func TestSimpleWorkflow(t *testing.T) {
   }
 
   for _, test := range tests {
-    p1 := NewProcess("p1", new(PlusOne))
-    p2 := NewProcess("p2", new(PlusOne))
+    p1 := NewProcess("p1", new(PlusOneWF))
+    p2 := NewProcess("p2", new(PlusOneWF))
 
     wf := NewWorkflow("test_wf")
     wf.Add(p1)
     wf.Add(p2)
     wf.Connect("p1", "Out", "p2", "In")
 
-    in := make(chan int)
+    in := make(chan interface{})
     out := make(chan interface{})
     wf.SetIn("p1", "In", in)
     wf.SetOut("p2", "Out", out)
