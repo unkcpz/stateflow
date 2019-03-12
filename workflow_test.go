@@ -32,16 +32,14 @@ func TestSimpleWorkflow(t *testing.T) {
     wf.Add(p2)
     wf.Connect("p1", "Out", "p2", "In")
 
-    in := make(chan interface{})
-    out := make(chan interface{})
-    wf.SetIn("p1", "In", in)
-    wf.SetOut("p2", "Out", out)
+    wf.ExposeIn("wfIn", "p1", "In")
+    wf.ExposeOut("wfOut", "p2", "Out")
 
+    wf.In("wfIn", test.in)
     wf.Run()
-    in <- test.in
 
-    got := <-out
-    if got != test.out {
+    got := wf.Out("wfOut")
+    if got.(int) != test.out {
       t.Errorf("%d + 2 = %d", test.in, got)
     }
   }
