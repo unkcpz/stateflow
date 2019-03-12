@@ -75,10 +75,14 @@ func TestProcessWithTwoInputs(t *testing.T) {
     proc.SetOut("Sum", sum)
 
     proc.Run()
+    fmt.Println("0")
     x <- test.a
+    fmt.Println("1")
     y <- test.b
+    fmt.Println("2")
 
     got := <-sum
+    fmt.Println("Done")
     if got !=test.sum {
       t.Errorf("%d + %d == %d", test.a, test.b, got)
     }

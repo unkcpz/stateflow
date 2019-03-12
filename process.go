@@ -1,9 +1,8 @@
 package giida
 
 import (
-  // "fmt"
   "reflect"
-  // "log"
+  "fmt"
 )
 
 type Tasker interface{
@@ -37,13 +36,24 @@ func (p *Process) SetOut(name string, channel chan interface{}) {
 
 func (p *Process) Run() {
   task := p.task
+  val := reflect.ValueOf(task).Elem()
   go func() {
-    val := reflect.ValueOf(task).Elem()
-    for name, ch := range p.inPorts {
-      v := <- ch
-      close(ch)
-      val.FieldByName(name).Set(reflect.ValueOf(v))
-    }
+    fmt.Println("00")
+    // for name, ch := range p.inPorts {
+    //   fmt.Println("01")
+    //   fmt.Println(name, p.inPorts)
+    //   val.FieldByName(name).Set(reflect.ValueOf(<-ch))
+    //   fmt.Println("02")
+    //   close(ch)
+    //   fmt.Println("03")
+    // }
+    ch := p.inPorts["X"]
+    val.FieldByName("X").Set(reflect.ValueOf(<-ch))
+    close(ch)
+    ch = p.inPorts["Y"]
+    val.FieldByName("Y").Set(reflect.ValueOf(<-ch))
+    close(ch)
+
     task.Execute()
     for name, ch := range p.outPorts {
       ch <- val.FieldByName(name).Interface()
