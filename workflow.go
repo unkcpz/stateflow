@@ -73,15 +73,15 @@ func (w *Workflow) Out(portName string) interface{} {
 }
 
 func (w *Workflow) Run() {
+  for _, p := range w.proc {
+    p.Run()
+  }
   for portName, channel := range w.inPorts {
     cacheData, ok := w.inCache[portName]
     if !ok {
       log.Panicf("input not been set for port %s", portName)
     }
     channel <- cacheData
-  }
-  for _, p := range w.proc {
-    p.Run()
   }
   for portName, channel := range w.outPorts {
     data := <-channel
