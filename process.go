@@ -2,7 +2,7 @@ package giida
 
 import (
   "reflect"
-  "fmt"
+  "sync"
 )
 
 type Tasker interface{
@@ -35,25 +35,19 @@ func (p *Process) SetOut(name string, channel chan interface{}) {
 }
 
 func (p *Process) Run() {
-  task := p.task
-  val := reflect.ValueOf(task).Elem()
-  go func() {
-    fmt.Println("00")
-    // for name, ch := range p.inPorts {
-    //   fmt.Println("01")
-    //   fmt.Println(name, p.inPorts)
-    //   val.FieldByName(name).Set(reflect.ValueOf(<-ch))
-    //   fmt.Println("02")
-    //   close(ch)
-    //   fmt.Println("03")
-    // }
-    ch := p.inPorts["X"]
-    val.FieldByName("X").Set(reflect.ValueOf(<-ch))
-    close(ch)
-    ch = p.inPorts["Y"]
-    val.FieldByName("Y").Set(reflect.ValueOf(<-ch))
-    close(ch)
-
+  go func(){
+    task := p.task
+    val := reflect.ValueOf(task).Elem()
+    var wg sync.WaitGroup
+    for name, ch := range p.inPorts {
+      wg.Add(1)
+      go func(name string, ch chan interface{}) {
+        defer wg.Done()
+        val.FieldByName(name).Set(reflect.ValueOf(<-ch))
+        close(ch)
+      }(name, ch)
+    }
+    wg.Wait()
     task.Execute()
     for name, ch := range p.outPorts {
       ch <- val.FieldByName(name).Interface()
