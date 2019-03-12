@@ -1,4 +1,4 @@
-package giida
+package flowmat
 
 import (
 )
