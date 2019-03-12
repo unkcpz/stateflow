@@ -5,16 +5,7 @@ import (
   "strconv"
 )
 
-type AdderToStr struct {
-  X int
-  Y int
-  Sum string
-}
-
-func (t *AdderToStr) Execute() {
-  t.Sum = strconv.Itoa(t.X + t.Y)
-}
-
+// Test Process two int input and string output
 func TestProcessWithTwoInputs(t *testing.T) {
   tests := []struct {
     a int
@@ -46,27 +37,90 @@ func TestProcessWithTwoInputs(t *testing.T) {
   }
 }
 
-type MyType struct {
-  Adder []int
-  Scaler int
+type AdderToStr struct {
+  X int
+  Y int
+  Sum string
 }
 
-type ComplexTask struct {
-  MyT MyType
-  Inc int
-  Out string
+func (t *AdderToStr) Execute() {
+  t.Sum = strconv.Itoa(t.X + t.Y)
 }
 
-func (t *ComplexTask) Execute() {
-  myType := t.MyT
-  sum := 0
-  for _, i := range myType.Adder {
-    sum += i
+// Test process of multiple output int, int -> int, int
+func TestProcessTwoInTwoOut(t *testing.T) {
+  tests := []struct {
+    num int
+    deno int
+    expectQuot int
+    expectRem int
+  }{
+    {5, 4, 1, 1},
+    {10, 3, 3, 1},
   }
-  sum *= myType.Scaler
-  t.Out = strconv.Itoa(sum + t.Inc)
+
+  for _, test := range tests {
+    proc := NewProcess("2to2", new(TwoResults))
+
+    num := make(chan interface{})
+    deno := make(chan interface{})
+    quot := make(chan interface{})
+    rem := make(chan interface{})
+    proc.SetIn("Num", num)
+    proc.SetIn("Deno", deno)
+    proc.SetOut("Quot", quot)
+    proc.SetOut("Rem", rem)
+
+    proc.Run()
+    num <- test.num
+    deno <- test.deno
+
+    gQuot := <-quot
+    gRem := <-rem
+    if gQuot != test.expectQuot || gRem != test.expectRem {
+      t.Errorf("%d / %d = (Quot: %d, Rem: %d)", test.num, test.deno, gQuot, gRem)
+    }
+  }
+
+  // What if one output is not used?
+  for _, test := range tests {
+    proc := NewProcess("2to2", new(TwoResults))
+
+    num := make(chan interface{})
+    deno := make(chan interface{})
+    quot := make(chan interface{})
+    rem := make(chan interface{})
+    proc.SetIn("Num", num)
+    proc.SetIn("Deno", deno)
+    proc.SetOut("Quot", quot)
+    proc.SetOut("Rem", rem)
+
+    proc.Run()
+    num <- test.num
+    deno <- test.deno
+
+    gQuot := <-quot
+    // gRem := <-rem
+    <-rem
+    if gQuot != test.expectQuot{
+      t.Errorf("%d / %d = (Quot: %d)", test.num, test.deno, gQuot)
+    }
+  }
 }
 
+type TwoResults struct {
+  Num int
+  Deno int
+  Quot int
+  Rem int
+}
+
+func (t *TwoResults) Execute() {
+  t.Quot = t.Num / t.Deno
+  t.Rem = t.Num % t.Deno
+}
+
+// Test a complex task with multi operation and custom defined type
 func TestComplexProcessWithCustomType(t *testing.T) {
   tests := []struct {
     mt MyType
@@ -104,4 +158,25 @@ func TestComplexProcessWithCustomType(t *testing.T) {
       t.Errorf("process ComplexTask[MyT=%v, Inc=%d], got %s, expected %s", test.mt, test.inc, got, test.expected)
     }
   }
+}
+
+type MyType struct {
+  Adder []int
+  Scaler int
+}
+
+type ComplexTask struct {
+  MyT MyType
+  Inc int
+  Out string
+}
+
+func (t *ComplexTask) Execute() {
+  myType := t.MyT
+  sum := 0
+  for _, i := range myType.Adder {
+    sum += i
+  }
+  sum *= myType.Scaler
+  t.Out = strconv.Itoa(sum + t.Inc)
 }
