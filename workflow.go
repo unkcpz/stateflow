@@ -1,8 +1,6 @@
 package giida
 
 import (
-  // "reflect"
-  // "fmt"
 )
 
 type Workflow struct {
@@ -26,14 +24,6 @@ func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
   s := w.proc[sendProc]
   r := w.proc[recvProc]
   out := make(chan interface{})
-  // val := reflect.ValueOf(r.task).Elem()
-  // fmt.Println("!!!")
-  // fmt.Println(reflect.ValueOf(val.FieldByName(recvPort)))
-
-  // fmt.Println("!!!")
-  // chanType := reflect.ChanOf(reflect.BothDir, reflect.TypeOf(val.FieldByName(recvPort)))
-  // chanType := reflect.ChanOf(reflect.BothDir, reflect.TypeOf(1))
-  // in := reflect.MakeChan(chanType, 0)
   in := make(chan interface{})
 
   s.SetOut(sendPort, out)
@@ -41,9 +31,6 @@ func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
 
   go func() {
     v := <-out
-    // <- out
-    // fmt.Println(<-out)
-    // in.Send(reflect.ValueOf(1))
     in <- v
   }()
 }
