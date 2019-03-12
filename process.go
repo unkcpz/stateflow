@@ -3,7 +3,7 @@ package giida
 import (
   // "fmt"
   "reflect"
-  "log"
+  // "log"
 )
 
 type Tasker interface{
@@ -13,7 +13,7 @@ type Tasker interface{
 type Process struct {
   Name string
   task Tasker
-  inPorts map[string]interface{}
+  inPorts map[string]chan interface{}
   outPorts map[string]chan interface{}
 }
 
@@ -21,13 +21,13 @@ func NewProcess(name string, task Tasker) *Process {
   proc := &Process{
     Name: name,
     task: task,
-    inPorts: make(map[string]interface{}),
+    inPorts: make(map[string]chan interface{}),
     outPorts: make(map[string]chan interface{}),
   }
   return proc
 }
 
-func (p *Process) SetIn(name string, channel interface{}) {
+func (p *Process) SetIn(name string, channel chan interface{}) {
   p.inPorts[name] = channel
 }
 
@@ -40,14 +40,9 @@ func (p *Process) Run() {
   go func() {
     val := reflect.ValueOf(task).Elem()
     for name, ch := range p.inPorts {
-      chv := reflect.ValueOf(ch)
-      // fmt.Printf("%v", reflect.ValueOf(chv.Field(2)))
-      v, ok := chv.Recv()
-      if !ok {
-        log.Fatalln("channel is closed after one data input.")
-      }
-      chv.Close()
-      val.FieldByName(name).Set(v)
+      v := <- ch
+      close(ch)
+      val.FieldByName(name).Set(reflect.ValueOf(v))
     }
     task.Execute()
     for name, ch := range p.outPorts {

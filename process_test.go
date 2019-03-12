@@ -29,7 +29,7 @@ func TestProcess(t *testing.T) {
   for _, test := range tests {
     proc := NewProcess("test", new(Demo))
 
-    in := make(chan int)
+    in := make(chan interface{})
     out := make(chan interface{})
     proc.SetIn("In", in)
     proc.SetOut("Out", out)
@@ -67,8 +67,8 @@ func TestProcessWithTwoInputs(t *testing.T) {
   for _, test := range tests {
     proc := NewProcess("adder", new(Adder))
 
-    x := make(chan int)
-    y := make(chan int)
+    x := make(chan interface{})
+    y := make(chan interface{})
     sum := make(chan interface{})
     proc.SetIn("X", x)
     proc.SetIn("Y", y)
@@ -108,13 +108,13 @@ func TestProcess2Process(t *testing.T) {
     p1 := NewProcess("p1", new(PlusOne))
     p2 := NewProcess("p2", new(PlusOne))
 
-    in := make(chan int)
+    in := make(chan interface{})
     out := make(chan interface{})
     p1.SetIn("In", in)
     p2.SetOut("Out", out)
 
     tmpOut := make(chan interface{})
-    tmpIn := make(chan int)
+    tmpIn := make(chan interface{})
     p1.SetOut("Out", tmpOut)
     p2.SetIn("In", tmpIn)
     go func(){
