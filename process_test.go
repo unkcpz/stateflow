@@ -3,6 +3,7 @@ package flowmat
 import (
   "testing"
   "strconv"
+  "fmt"
 )
 
 // Test Process two int input and string output
@@ -31,6 +32,7 @@ func TestProcessWithTwoInputs(t *testing.T) {
     y <- test.b
 
     got := <-sum
+    fmt.Println(proc.inPorts["X"].cache)
     if got !=test.sum {
       t.Errorf("component: %d + %d == %d", test.a, test.b, got)
     }

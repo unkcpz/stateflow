@@ -43,13 +43,18 @@ func (p *Process) Run() {
     task := p.task
     val := reflect.ValueOf(task).Elem()
     var wg sync.WaitGroup
-    for name, port := range p.inPorts {
+    for name, p := range p.inPorts {
       wg.Add(1)
-      go func(name string, ch chan interface{}) {
+      go func(name string, p *port) {
         defer wg.Done()
-        val.FieldByName(name).Set(reflect.ValueOf(<-ch))
+        ch := p.channel
+        v := reflect.ValueOf(<-ch)
+        val.FieldByName(name).Set(v)
+        if p.cache == nil{
+          p.cache = v.Interface()
+        }
         close(ch)
-      }(name, port.channel)
+      }(name, p)
     }
     wg.Wait()
 
@@ -60,7 +65,9 @@ func (p *Process) Run() {
       wg.Add(1)
       go func(name string, ch chan interface{}) {
         defer wg.Done()
-        ch <- val.FieldByName(name).Interface()
+        v := val.FieldByName(name).Interface()
+        ch <- v
+        port.cache = v
         close(ch)
       }(name, port.channel)
     }
