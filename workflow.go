@@ -5,7 +5,7 @@ import (
 )
 
 type Workflow struct {
-  Name string
+  name string
   proc map[string]*Process
   inPorts map[string]*Port
   outPorts map[string]*Port
@@ -14,7 +14,7 @@ type Workflow struct {
 // NewWorkflow create workflow object
 func NewWorkflow(name string) *Workflow {
   wf := &Workflow{
-    Name: name,
+    name: name,
     proc: make(map[string]*Process),
     inPorts: make(map[string]*Port),
     outPorts: make(map[string]*Port),
@@ -24,7 +24,7 @@ func NewWorkflow(name string) *Workflow {
 
 // Add process to workflow list
 func (w *Workflow) Add(p *Process) {
-  w.proc[p.Name] = p
+  w.proc[p.name] = p
 }
 
 // Connect outport of Process A(sendProc) to inport of Process B(recvProc)

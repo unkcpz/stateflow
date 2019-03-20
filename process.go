@@ -11,7 +11,7 @@ type Tasker interface{
 }
 
 type Process struct {
-  Name string
+  name string
   task Tasker
   inPorts map[string]*Port
   outPorts map[string]*Port
@@ -20,12 +20,16 @@ type Process struct {
 // NewProcess create a Process of a task
 func NewProcess(name string, task Tasker) *Process {
   proc := &Process{
-    Name: name,
+    name: name,
     task: task,
     inPorts: make(map[string]*Port),
     outPorts: make(map[string]*Port),
   }
   return proc
+}
+
+func (p  *Process) Name() string {
+  return p.name
 }
 
 // SetIn bind port to a channel
