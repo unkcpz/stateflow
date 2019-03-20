@@ -44,3 +44,44 @@ func TestSimpleWorkflow(t *testing.T) {
     }
   }
 }
+
+// Connect WF->Proc as a new WF
+func TestWorkflowIsProcess(t *testing.T) {
+  tests := []struct {
+    in int
+    out int
+  }{
+    {0, 3},
+    {-2, 1},
+    {999, 1002},
+  }
+
+  for _, test := range tests {
+    p1 := NewProcess("p1", new(PlusOneWF))
+    p2 := NewProcess("p2", new(PlusOneWF))
+
+    subwf := NewWorkflow("wftest")
+    subwf.Add(p1)
+    subwf.Add(p2)
+    subwf.Connect("p1", "Out", "p2", "In")
+    subwf.ExposeIn("wfIn", "p1", "In")
+    subwf.ExposeOut("wfOut", "p2", "Out")
+
+    pBefore := NewProcess("pb", new(PlusOneWF))
+    wf := NewWorkflow("wf")
+    wf.Add(pBefore)
+    wf.Add(subwf)
+    wf.Connect("pb", "Out", "wftest", "wfIn")
+
+    wf.ExposeIn("wfIn", "pb", "In")
+    wf.ExposeOut("wfOut", "wftest", "wfOut")
+
+    wf.In("wfIn", test.in)
+    wf.Run()
+
+    got := wf.Out("wfOut")
+    if got.(int) != test.out {
+      e.Errorf("%d + 3 = %d", test.in, got)
+    }
+  }
+}
