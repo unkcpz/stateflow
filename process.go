@@ -55,9 +55,7 @@ func (p *Process) Run() {
   task := p.task
   val := reflect.ValueOf(task).Elem()
   // Make sure every output data have port to save
-  numUnset := val.NumField() - len(p.inPorts) - len(p.outPorts)
-  unset := make([]string, numUnset)
-  n := 0
+  unset := make([]string, 0)
   for i:=0; i<val.NumField(); i++ {
     fieldName := val.Type().Field(i).Name
     // set only when fieldName not set in inPorts or outPorts
@@ -67,7 +65,7 @@ func (p *Process) Run() {
       p.outPorts[fieldName] = &Port{
         channel: make(chan interface{}),
       }
-      unset[n] = fieldName
+      unset = append(unset, fieldName)
     }
   }
   go func(){
@@ -112,7 +110,7 @@ func (p *Process) Run() {
   }
 
   for _, name := range unset {
-    v := <-p.outPorts[name].channel
-    p.outPorts[name].cache = v
+    // cache is already set in Run
+    <-p.outPorts[name].channel
   }
 }
