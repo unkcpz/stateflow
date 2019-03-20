@@ -60,6 +60,19 @@ func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
   }()
 }
 
+func (w *Workflow) SetIn(name string, channel chan interface{}) {
+  w.inPorts[name] = &Port{
+    channel: channel,
+  }
+}
+
+// SetOut bind port to a channel
+func (w *Workflow) SetOut(name string, channel chan interface{}) {
+  w.outPorts[name] = &Port{
+    channel: channel,
+  }
+}
+
 // ExposeIn expose inPorts of process to workflow
 func (w *Workflow) ExposeIn(name, procName, portName string) {
   w.inPorts[name] = new(Port)

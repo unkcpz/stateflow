@@ -45,6 +45,10 @@ func TestSimpleWorkflow(t *testing.T) {
   }
 }
 
+func TestUseWorkflowAsProcess(t *testing.T) {
+  
+}
+
 // // Connect WF->Proc as a new WF
 // func TestWorkflowIsProcess(t *testing.T) {
 //   tests := []struct {
