@@ -34,8 +34,12 @@ func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
   out := make(chan interface{})
   in := make(chan interface{})
 
-  s.SetOut(sendPort, out)
-  r.SetIn(recvPort, in)
+  s.outPorts[sendPort] = &Port{
+    channel: out,
+  }
+  r.inPorts[recvPort] = &Port{
+    channel: in,
+  }
 
   go func() {
     v := <-out
