@@ -12,26 +12,30 @@ type Tasker interface{
 type Process struct {
   Name string
   task Tasker
-  inPorts map[string]chan interface{}
-  outPorts map[string]chan interface{}
+  inPorts map[string]*port
+  outPorts map[string]*port
 }
 
 func NewProcess(name string, task Tasker) *Process {
   proc := &Process{
     Name: name,
     task: task,
-    inPorts: make(map[string]chan interface{}),
-    outPorts: make(map[string]chan interface{}),
+    inPorts: make(map[string]*port),
+    outPorts: make(map[string]*port),
   }
   return proc
 }
 
 func (p *Process) SetIn(name string, channel chan interface{}) {
-  p.inPorts[name] = channel
+  p.inPorts[name] = &port{
+    channel: channel,
+  }
 }
 
 func (p *Process) SetOut(name string, channel chan interface{}) {
-  p.outPorts[name] = channel
+  p.outPorts[name] = &port{
+    channel: channel,
+  }
 }
 
 func (p *Process) Run() {
@@ -39,26 +43,26 @@ func (p *Process) Run() {
     task := p.task
     val := reflect.ValueOf(task).Elem()
     var wg sync.WaitGroup
-    for name, ch := range p.inPorts {
+    for name, port := range p.inPorts {
       wg.Add(1)
       go func(name string, ch chan interface{}) {
         defer wg.Done()
         val.FieldByName(name).Set(reflect.ValueOf(<-ch))
         close(ch)
-      }(name, ch)
+      }(name, port.channel)
     }
     wg.Wait()
 
     // Execute the function of Process
     task.Execute()
 
-    for name, ch := range p.outPorts {
+    for name, port := range p.outPorts {
       wg.Add(1)
       go func(name string, ch chan interface{}) {
         defer wg.Done()
         ch <- val.FieldByName(name).Interface()
         close(ch)
-      }(name, ch)
+      }(name, port.channel)
     }
     wg.Wait()
   }()

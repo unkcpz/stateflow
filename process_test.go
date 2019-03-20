@@ -32,10 +32,26 @@ func TestProcessWithTwoInputs(t *testing.T) {
 
     got := <-sum
     if got !=test.sum {
-      t.Errorf("%d + %d == %d", test.a, test.b, got)
+      t.Errorf("component: %d + %d == %d", test.a, test.b, got)
     }
   }
+
+  // // Test Process used as an independent component
+  // for _, test := range tests {
+  //   proc := NewProcess("adder", new(AdderToStr))
+  //
+  //   proc.In("X", test.a)
+  //   proc.In("Y", test.b)
+  //
+  //   proc.Run()
+  //
+  //   got := proc.Out("Sum")
+  //   if got !=test.sum {
+  //     t.Errorf("plugin: %d + %d == %d", test.a, test.b, got)
+  //   }
+  // }
 }
+
 
 type AdderToStr struct {
   X int

@@ -4,11 +4,6 @@ import (
   "log"
 )
 
-type port struct {
-  channel chan interface{}
-  cache interface{}
-}
-
 type Workflow struct {
   Name string
   proc map[string]*Process
@@ -48,21 +43,25 @@ func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
 func (w *Workflow) ExposeIn(name, procName, portName string) {
   w.inPorts[name] = new(port)
   channel := make(chan interface{})
-  port := w.inPorts[name]
-  port.channel = channel
+  wfport := w.inPorts[name]
+  wfport.channel = channel
 
   p := w.proc[procName]
-  p.inPorts[portName] = channel
+  p.inPorts[portName] = &port{
+    channel: channel,
+  }
 }
 
 func (w *Workflow) ExposeOut(name, procName, portName string) {
   w.outPorts[name] = new(port)
   channel := make(chan interface{})
-  port := w.outPorts[name]
-  port.channel = channel
+  wfport := w.outPorts[name]
+  wfport.channel = channel
 
   p := w.proc[procName]
-  p.outPorts[portName] = channel
+  p.outPorts[portName] = &port{
+    channel: channel,
+  }
 }
 
 func (w *Workflow) In(portName string, data interface{}) {
