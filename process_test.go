@@ -3,7 +3,6 @@ package flowmat
 import (
   "testing"
   "strconv"
-  "fmt"
 )
 
 // Test Process two int input and string output
@@ -32,27 +31,25 @@ func TestProcessWithTwoInputs(t *testing.T) {
     y <- test.b
 
     got := <-sum
-    fmt.Println(proc.inPorts["X"].cache)
-    fmt.Println(proc.outPorts["Sum"].cache)
     if got !=test.sum {
       t.Errorf("component: %d + %d == %d", test.a, test.b, got)
     }
   }
 
-  // // Test Process used as an independent component
-  // for _, test := range tests {
-  //   proc := NewProcess("adder", new(AdderToStr))
-  //
-  //   proc.In("X", test.a)
-  //   proc.In("Y", test.b)
-  //
-  //   proc.Run()
-  //
-  //   got := proc.Out("Sum")
-  //   if got !=test.sum {
-  //     t.Errorf("plugin: %d + %d == %d", test.a, test.b, got)
-  //   }
-  // }
+  // Test Process used as an independent component
+  for _, test := range tests {
+    proc := NewProcess("adder", new(AdderToStr))
+
+    proc.In("X", test.a)
+    proc.In("Y", test.b)
+
+    proc.Run()
+
+    got := proc.Out("Sum")
+    if got !=test.sum {
+      t.Errorf("plugin: %d + %d == %s", test.a, test.b, got)
+    }
+  }
 }
 
 

@@ -3,6 +3,7 @@ package flowmat
 import (
   "reflect"
   "sync"
+  // "fmt"
 )
 
 type Tasker interface{
@@ -38,10 +39,38 @@ func (p *Process) SetOut(name string, channel chan interface{}) {
   }
 }
 
+func (p *Process) In(name string, data interface{}) {
+  p.inPorts[name] = &Port{
+    channel: make(chan interface{}),
+    cache: data,
+  }
+}
+
+func (p *Process) Out(name string) interface{} {
+  port := p.outPorts[name]
+  return port.cache
+}
+
 func (p *Process) Run() {
+  task := p.task
+  val := reflect.ValueOf(task).Elem()
+  // Make sure every output data have port to save
+  numUnset := val.NumField() - len(p.inPorts) - len(p.outPorts)
+  unset := make([]string, numUnset)
+  n := 0
+  for i:=0; i<val.NumField(); i++ {
+    fieldName := val.Type().Field(i).Name
+    // set only when fieldName not set in inPorts or outPorts
+    _, okIn := p.inPorts[fieldName]
+    _, okOut := p.outPorts[fieldName]
+    if !okIn && !okOut {
+      p.outPorts[fieldName] = &Port{
+        channel: make(chan interface{}),
+      }
+      unset[n] = fieldName
+    }
+  }
   go func(){
-    task := p.task
-    val := reflect.ValueOf(task).Elem()
     var wg sync.WaitGroup
     for name, port := range p.inPorts {
       wg.Add(1)
@@ -67,11 +96,23 @@ func (p *Process) Run() {
         defer wg.Done()
         ch := port.channel
         v := val.FieldByName(name).Interface()
-        ch <- v
         port.cache = v
+        ch <- v
         close(ch)
       }(name, port)
     }
     wg.Wait()
   }()
+
+  for _, port := range p.inPorts {
+    cacheData := port.cache
+    if cacheData != nil {
+      port.channel <- cacheData
+    }
+  }
+
+  for _, name := range unset {
+    v := <-p.outPorts[name].channel
+    p.outPorts[name].cache = v
+  }
 }
