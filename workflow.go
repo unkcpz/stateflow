@@ -4,6 +4,10 @@ import (
   "log"
 )
 
+type Processer interface {
+  Name() string
+}
+
 type Workflow struct {
   name string
   proc map[string]*Process
@@ -22,6 +26,10 @@ func NewWorkflow(name string) *Workflow {
   return wf
 }
 
+func (w *Workflow) Name() string {
+  return w.name
+}
+
 // Add process to workflow list
 func (w *Workflow) Add(p *Process) {
   w.proc[p.name] = p
@@ -34,12 +42,14 @@ func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
   out := make(chan interface{})
   in := make(chan interface{})
 
-  s.outPorts[sendPort] = &Port{
-    channel: out,
-  }
-  r.inPorts[recvPort] = &Port{
-    channel: in,
-  }
+  // s.outPorts[sendPort] = &Port{
+  //   channel: out,
+  // }
+  // r.inPorts[recvPort] = &Port{
+  //   channel: in,
+  // }
+  s.SetOut(sendPort, out)
+  r.SetIn(recvPort, in)
 
   go func() {
     v := <-out
@@ -55,9 +65,10 @@ func (w *Workflow) ExposeIn(name, procName, portName string) {
   wfport.channel = channel
 
   p := w.proc[procName]
-  p.inPorts[portName] = &Port{
-    channel: channel,
-  }
+  // p.inPorts[portName] = &Port{
+  //   channel: channel,
+  // }
+  p.SetIn(portName, channel)
 }
 
 // ExposeOut expose outPorts of process to workflow
@@ -68,9 +79,10 @@ func (w *Workflow) ExposeOut(name, procName, portName string) {
   wfport.channel = channel
 
   p := w.proc[procName]
-  p.outPorts[portName] = &Port{
-    channel: channel,
-  }
+  // p.outPorts[portName] = &Port{
+  //   channel: channel,
+  // }
+  p.SetOut(portName, channel)
 }
 
 // In pass the data to the inport
