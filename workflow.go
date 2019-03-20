@@ -7,16 +7,16 @@ import (
 type Workflow struct {
   Name string
   proc map[string]*Process
-  inPorts map[string]*port
-  outPorts map[string]*port
+  inPorts map[string]*Port
+  outPorts map[string]*Port
 }
 
 func NewWorkflow(name string) *Workflow {
   wf := &Workflow{
     Name: name,
     proc: make(map[string]*Process),
-    inPorts: make(map[string]*port),
-    outPorts: make(map[string]*port),
+    inPorts: make(map[string]*Port),
+    outPorts: make(map[string]*Port),
   }
   return wf
 }
@@ -41,25 +41,25 @@ func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
 }
 
 func (w *Workflow) ExposeIn(name, procName, portName string) {
-  w.inPorts[name] = new(port)
+  w.inPorts[name] = new(Port)
   channel := make(chan interface{})
   wfport := w.inPorts[name]
   wfport.channel = channel
 
   p := w.proc[procName]
-  p.inPorts[portName] = &port{
+  p.inPorts[portName] = &Port{
     channel: channel,
   }
 }
 
 func (w *Workflow) ExposeOut(name, procName, portName string) {
-  w.outPorts[name] = new(port)
+  w.outPorts[name] = new(Port)
   channel := make(chan interface{})
   wfport := w.outPorts[name]
   wfport.channel = channel
 
   p := w.proc[procName]
-  p.outPorts[portName] = &port{
+  p.outPorts[portName] = &Port{
     channel: channel,
   }
 }

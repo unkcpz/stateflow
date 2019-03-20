@@ -12,28 +12,28 @@ type Tasker interface{
 type Process struct {
   Name string
   task Tasker
-  inPorts map[string]*port
-  outPorts map[string]*port
+  inPorts map[string]*Port
+  outPorts map[string]*Port
 }
 
 func NewProcess(name string, task Tasker) *Process {
   proc := &Process{
     Name: name,
     task: task,
-    inPorts: make(map[string]*port),
-    outPorts: make(map[string]*port),
+    inPorts: make(map[string]*Port),
+    outPorts: make(map[string]*Port),
   }
   return proc
 }
 
 func (p *Process) SetIn(name string, channel chan interface{}) {
-  p.inPorts[name] = &port{
+  p.inPorts[name] = &Port{
     channel: channel,
   }
 }
 
 func (p *Process) SetOut(name string, channel chan interface{}) {
-  p.outPorts[name] = &port{
+  p.outPorts[name] = &Port{
     channel: channel,
   }
 }
@@ -45,7 +45,7 @@ func (p *Process) Run() {
     var wg sync.WaitGroup
     for name, p := range p.inPorts {
       wg.Add(1)
-      go func(name string, p *port) {
+      go func(name string, p *Port) {
         defer wg.Done()
         ch := p.channel
         v := reflect.ValueOf(<-ch)
