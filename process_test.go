@@ -35,21 +35,6 @@ func TestProcessWithTwoInputs(t *testing.T) {
       t.Errorf("component: %d + %d == %d", test.a, test.b, got)
     }
   }
-
-  // Test Process used as an independent component
-  for _, test := range tests {
-    proc := NewProcess("adder", new(AdderToStr))
-
-    proc.In("X", test.a)
-    proc.In("Y", test.b)
-
-    proc.Run()
-
-    got := proc.Out("Sum")
-    if got !=test.sum {
-      t.Errorf("plugin: %d + %d == %s", test.a, test.b, got)
-    }
-  }
 }
 
 
@@ -116,7 +101,8 @@ func TestProcessTwoInTwoOut(t *testing.T) {
     deno <- test.deno
 
     gQuot := <-quot
-    // gRem := <-rem
+    // The following code is optional
+    // if not coded outPorts is unseted
     <-rem
     if gQuot != test.expectQuot{
       t.Errorf("%d / %d = (Quot: %d)", test.num, test.deno, gQuot)
@@ -195,4 +181,41 @@ func (t *ComplexTask) Execute() {
   }
   sum *= myType.Scaler
   t.Out = strconv.Itoa(sum + t.Inc)
+}
+
+// Test Process as independent plugin two int input and string output
+func TestProcessWithTwoInputsPlugin(t *testing.T) {
+  tests := []struct {
+    a int
+    b int
+    sum string
+  }{
+    {1, 2, "3"},
+    {-1, 1, "0"},
+  }
+
+  for _, test := range tests {
+    proc := NewProcess("adder", new(AdderToStrPlugin))
+
+    proc.In("X", test.a)
+    proc.In("Y", test.b)
+
+    proc.Run()
+
+    got := proc.Out("Sum")
+    if got !=test.sum {
+      t.Errorf("plugin: %d + %d == %s", test.a, test.b, got)
+    }
+  }
+}
+
+
+type AdderToStrPlugin struct {
+  X int
+  Y int
+  Sum string
+}
+
+func (t *AdderToStrPlugin) Execute() {
+  t.Sum = strconv.Itoa(t.X + t.Y)
 }

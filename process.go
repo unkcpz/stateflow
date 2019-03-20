@@ -54,7 +54,7 @@ func (p *Process) Out(name string) interface{} {
 func (p *Process) Run() {
   task := p.task
   val := reflect.ValueOf(task).Elem()
-  // Make sure every output data have port to save
+  // unset is Field of unset Ports
   unset := make([]string, 0)
   for i:=0; i<val.NumField(); i++ {
     fieldName := val.Type().Field(i).Name
@@ -68,6 +68,8 @@ func (p *Process) Run() {
       unset = append(unset, fieldName)
     }
   }
+
+  // gorountine get input and run Execute()
   go func(){
     var wg sync.WaitGroup
     for name, port := range p.inPorts {
@@ -102,6 +104,7 @@ func (p *Process) Run() {
     wg.Wait()
   }()
 
+  // 
   for _, port := range p.inPorts {
     cacheData := port.cache
     if cacheData != nil {
