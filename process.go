@@ -48,7 +48,10 @@ func (p *Process) Run() {
       }(name, ch)
     }
     wg.Wait()
+
+    // Execute the function of Process
     task.Execute()
+
     for name, ch := range p.outPorts {
       wg.Add(1)
       go func(name string, ch chan interface{}) {
