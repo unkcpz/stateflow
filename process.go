@@ -48,9 +48,18 @@ func (p *Process) Run() {
       }(name, ch)
     }
     wg.Wait()
+
+    // Execute the function of Process
     task.Execute()
+
     for name, ch := range p.outPorts {
-      ch <- val.FieldByName(name).Interface()
+      wg.Add(1)
+      go func(name string, ch chan interface{}) {
+        defer wg.Done()
+        ch <- val.FieldByName(name).Interface()
+        close(ch)
+      }(name, ch)
     }
+    wg.Wait()
   }()
 }

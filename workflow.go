@@ -12,16 +12,16 @@ type port struct {
 type Workflow struct {
   Name string
   proc map[string]*Process
-  inPortss map[string]*port
-  outPortss map[string]*port
+  inPorts map[string]*port
+  outPorts map[string]*port
 }
 
 func NewWorkflow(name string) *Workflow {
   wf := &Workflow{
     Name: name,
     proc: make(map[string]*Process),
-    inPortss: make(map[string]*port),
-    outPortss: make(map[string]*port),
+    inPorts: make(map[string]*port),
+    outPorts: make(map[string]*port),
   }
   return wf
 }
@@ -46,9 +46,9 @@ func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
 }
 
 func (w *Workflow) ExposeIn(name, procName, portName string) {
-  w.inPortss[name] = new(port)
+  w.inPorts[name] = new(port)
   channel := make(chan interface{})
-  port := w.inPortss[name]
+  port := w.inPorts[name]
   port.channel = channel
 
   p := w.proc[procName]
@@ -56,9 +56,9 @@ func (w *Workflow) ExposeIn(name, procName, portName string) {
 }
 
 func (w *Workflow) ExposeOut(name, procName, portName string) {
-  w.outPortss[name] = new(port)
+  w.outPorts[name] = new(port)
   channel := make(chan interface{})
-  port := w.outPortss[name]
+  port := w.outPorts[name]
   port.channel = channel
 
   p := w.proc[procName]
@@ -66,12 +66,12 @@ func (w *Workflow) ExposeOut(name, procName, portName string) {
 }
 
 func (w *Workflow) In(portName string, data interface{}) {
-  port := w.inPortss[portName]
+  port := w.inPorts[portName]
   port.cache = data
 }
 
 func (w *Workflow) Out(portName string) interface{} {
-  data := w.outPortss[portName].cache
+  data := w.outPorts[portName].cache
   if data == nil {
     log.Panicf("%s has not get data", portName)
   }
@@ -82,14 +82,14 @@ func (w *Workflow) Run() {
   for _, p := range w.proc {
     p.Run()
   }
-  for portName, port := range w.inPortss {
+  for portName, port := range w.inPorts {
     cacheData := port.cache
     if cacheData == nil {
       log.Panicf("input not been set for port %s", portName)
     }
     port.channel <- cacheData
   }
-  for _, port := range w.outPortss {
+  for _, port := range w.outPorts {
     data := <-port.channel
     port.cache = data
   }
