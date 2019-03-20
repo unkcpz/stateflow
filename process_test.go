@@ -33,6 +33,7 @@ func TestProcessWithTwoInputs(t *testing.T) {
 
     got := <-sum
     fmt.Println(proc.inPorts["X"].cache)
+    fmt.Println(proc.outPorts["Sum"].cache)
     if got !=test.sum {
       t.Errorf("component: %d + %d == %d", test.a, test.b, got)
     }
