@@ -1,7 +1,7 @@
 package flowmat
 
 import (
-  "log"
+  // "log"
 )
 
 type Processer interface {
@@ -110,9 +110,9 @@ func (w *Workflow) In(portName string, data interface{}) {
 // Out get the result from outport
 func (w *Workflow) Out(portName string) interface{} {
   data := w.outPorts[portName].cache
-  if data == nil {
-    log.Panicf("%s has not get data", portName)
-  }
+  // if data == nil {
+  //   log.Panicf("%s has not get data", portName)
+  // }
   return data
 }
 
@@ -121,13 +121,16 @@ func (w *Workflow) Run() {
   for _, p := range w.proc {
     p.Run()
   }
-  for portName, port := range w.inPorts {
+  for _, port := range w.inPorts {
     cacheData := port.cache
-    if cacheData == nil {
-      log.Panicf("input not been set for port %s", portName)
+    // if cacheData == nil {
+    //   log.Panicf("input not been set for port %s", portName)
+    // }
+    if cacheData != nil {
+      port.channel <- cacheData
     }
-    port.channel <- cacheData
   }
+  // Here is the trickyyyyy!!
   for _, port := range w.outPorts {
     data := <-port.channel
     port.cache = data
