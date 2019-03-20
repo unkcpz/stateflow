@@ -6,11 +6,14 @@ import (
 
 type Processer interface {
   Name() string
+  Run()
+  SetIn(string, chan interface{})
+  SetOut(string, chan interface{})
 }
 
 type Workflow struct {
   name string
-  proc map[string]*Process
+  proc map[string]Processer
   inPorts map[string]*Port
   outPorts map[string]*Port
 }
@@ -19,7 +22,7 @@ type Workflow struct {
 func NewWorkflow(name string) *Workflow {
   wf := &Workflow{
     name: name,
-    proc: make(map[string]*Process),
+    proc: make(map[string]Processer),
     inPorts: make(map[string]*Port),
     outPorts: make(map[string]*Port),
   }
@@ -31,8 +34,8 @@ func (w *Workflow) Name() string {
 }
 
 // Add process to workflow list
-func (w *Workflow) Add(p *Process) {
-  w.proc[p.name] = p
+func (w *Workflow) Add(p Processer) {
+  w.proc[p.Name()] = p
 }
 
 // Connect outport of Process A(sendProc) to inport of Process B(recvProc)
