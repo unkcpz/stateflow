@@ -11,6 +11,7 @@ type Workflow struct {
   outPorts map[string]*Port
 }
 
+// NewWorkflow create workflow object
 func NewWorkflow(name string) *Workflow {
   wf := &Workflow{
     Name: name,
@@ -21,10 +22,12 @@ func NewWorkflow(name string) *Workflow {
   return wf
 }
 
+// Add process to workflow list
 func (w *Workflow) Add(p *Process) {
   w.proc[p.Name] = p
 }
 
+// Connect outport of Process A(sendProc) to inport of Process B(recvProc)
 func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
   s := w.proc[sendProc]
   r := w.proc[recvProc]
@@ -40,6 +43,7 @@ func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
   }()
 }
 
+// ExposeIn expose inPorts of process to workflow
 func (w *Workflow) ExposeIn(name, procName, portName string) {
   w.inPorts[name] = new(Port)
   channel := make(chan interface{})
@@ -52,6 +56,7 @@ func (w *Workflow) ExposeIn(name, procName, portName string) {
   }
 }
 
+// ExposeOut expose outPorts of process to workflow
 func (w *Workflow) ExposeOut(name, procName, portName string) {
   w.outPorts[name] = new(Port)
   channel := make(chan interface{})
@@ -64,11 +69,13 @@ func (w *Workflow) ExposeOut(name, procName, portName string) {
   }
 }
 
+// In pass the data to the inport
 func (w *Workflow) In(portName string, data interface{}) {
   port := w.inPorts[portName]
   port.cache = data
 }
 
+// Out get the result from outport
 func (w *Workflow) Out(portName string) interface{} {
   data := w.outPorts[portName].cache
   if data == nil {
@@ -77,6 +84,7 @@ func (w *Workflow) Out(portName string) interface{} {
   return data
 }
 
+// Run the workflow aka its process in order
 func (w *Workflow) Run() {
   for _, p := range w.proc {
     p.Run()

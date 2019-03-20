@@ -17,6 +17,7 @@ type Process struct {
   outPorts map[string]*Port
 }
 
+// NewProcess create a Process of a task
 func NewProcess(name string, task Tasker) *Process {
   proc := &Process{
     Name: name,
@@ -27,18 +28,21 @@ func NewProcess(name string, task Tasker) *Process {
   return proc
 }
 
+// SetIn bind port to a channel
 func (p *Process) SetIn(name string, channel chan interface{}) {
   p.inPorts[name] = &Port{
     channel: channel,
   }
 }
 
+// SetOut bind port to a channel
 func (p *Process) SetOut(name string, channel chan interface{}) {
   p.outPorts[name] = &Port{
     channel: channel,
   }
 }
 
+// In pass data to inport
 func (p *Process) In(name string, data interface{}) {
   p.inPorts[name] = &Port{
     channel: make(chan interface{}),
@@ -46,11 +50,13 @@ func (p *Process) In(name string, data interface{}) {
   }
 }
 
+// Out get result from outport
 func (p *Process) Out(name string) interface{} {
   port := p.outPorts[name]
   return port.cache
 }
 
+// Run process
 func (p *Process) Run() {
   task := p.task
   val := reflect.ValueOf(task).Elem()
@@ -104,7 +110,7 @@ func (p *Process) Run() {
     wg.Wait()
   }()
 
-  // 
+  //
   for _, port := range p.inPorts {
     cacheData := port.cache
     if cacheData != nil {
