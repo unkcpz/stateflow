@@ -45,141 +45,130 @@ func (t *AdderToStr) Execute() {
   t.Sum = strconv.Itoa(t.X + t.Y)
 }
 
-// // Test process of multiple output int, int -> int, int
-// func TestProcessTwoInTwoOut(t *testing.T) {
-//   tests := []struct {
-//     num int
-//     deno int
-//     expectQuot int
-//     expectRem int
-//   }{
-//     {5, 4, 1, 1},
-//     {10, 3, 3, 1},
-//   }
-//
-//   for _, test := range tests {
-//     proc := NewProcess("2to2", new(TwoResults))
-//
-//     num := make(chan interface{})
-//     deno := make(chan interface{})
-//     quot := make(chan interface{})
-//     rem := make(chan interface{})
-//     proc.SetIn("Num", num)
-//     proc.SetIn("Deno", deno)
-//     proc.SetOut("Quot", quot)
-//     proc.SetOut("Rem", rem)
-//
-//     proc.Run()
-//     num <- test.num
-//     deno <- test.deno
-//
-//     gQuot := <-quot
-//     gRem := <-rem
-//     if gQuot != test.expectQuot || gRem != test.expectRem {
-//       t.Errorf("%d / %d = (Quot: %d, Rem: %d)", test.num, test.deno, gQuot, gRem)
-//     }
-//   }
-//
-//   // What if one output is not used?
-//   for _, test := range tests {
-//     proc := NewProcess("2to2", new(TwoResults))
-//
-//     num := make(chan interface{})
-//     deno := make(chan interface{})
-//     quot := make(chan interface{})
-//     rem := make(chan interface{})
-//     proc.SetIn("Num", num)
-//     proc.SetIn("Deno", deno)
-//     proc.SetOut("Quot", quot)
-//     proc.SetOut("Rem", rem)
-//
-//     proc.Run()
-//     num <- test.num
-//     deno <- test.deno
-//
-//     gQuot := <-quot
-//     // The following code is optional
-//     // if not coded outPorts is unseted
-//     <-rem
-//     if gQuot != test.expectQuot{
-//       t.Errorf("%d / %d = (Quot: %d)", test.num, test.deno, gQuot)
-//     }
-//   }
-// }
-//
-// type TwoResults struct {
-//   Num int
-//   Deno int
-//   Quot int
-//   Rem int
-// }
-//
-// func (t *TwoResults) Execute() {
-//   t.Quot = t.Num / t.Deno
-//   t.Rem = t.Num % t.Deno
-// }
-//
-// // Test a complex task with multi operation and custom defined type
-// func TestComplexProcessWithCustomType(t *testing.T) {
-//   tests := []struct {
-//     mt MyType
-//     inc int
-//     expected string
-//   }{
-//     {
-//       MyType{[]int{1, 2}, 2},
-//       100,
-//       "106",
-//     },
-//     {
-//       MyType{[]int{1, 2, 4, 6}, 0},
-//       1000,
-//       "1000",
-//     },
-//   }
-//
-//   for _, test := range tests {
-//     proc := NewProcess("complexTask", new(ComplexTask))
-//
-//     myType := make(chan interface{})
-//     inc := make(chan interface{})
-//     out := make(chan interface{})
-//     proc.SetIn("MyT", myType)
-//     proc.SetIn("Inc", inc)
-//     proc.SetOut("Out", out)
-//
-//     proc.Run()
-//     myType <- test.mt
-//     inc <- test.inc
-//
-//     got := <-out
-//     if got != test.expected {
-//       t.Errorf("process ComplexTask[MyT=%v, Inc=%d], got %s, expected %s", test.mt, test.inc, got, test.expected)
-//     }
-//   }
-// }
-//
-// type MyType struct {
-//   Adder []int
-//   Scaler int
-// }
-//
-// type ComplexTask struct {
-//   MyT MyType
-//   Inc int
-//   Out string
-// }
-//
-// func (t *ComplexTask) Execute() {
-//   myType := t.MyT
-//   sum := 0
-//   for _, i := range myType.Adder {
-//     sum += i
-//   }
-//   sum *= myType.Scaler
-//   t.Out = strconv.Itoa(sum + t.Inc)
-// }
-//
+// Test process of multiple output int, int -> int, int
+func TestProcessTwoInTwoOut(t *testing.T) {
+  tests := []struct {
+    num int
+    deno int
+    expectQuot int
+    expectRem int
+  }{
+    {5, 4, 1, 1},
+    {10, 3, 3, 1},
+  }
+
+  for _, test := range tests {
+    proc := NewProcess("2to2", new(TwoResults))
+
+    num := proc.ExposeIn("Num")
+    deno := proc.ExposeIn("Deno")
+    quot := proc.ExposeOut("Quot")
+    rem := proc.ExposeOut("Rem")
+
+    proc.Run()
+    num.channel <- test.num
+    deno.channel <- test.deno
+
+    gQuot := <-quot.channel
+    gRem := <-rem.channel
+    if gQuot != test.expectQuot || gRem != test.expectRem {
+      t.Errorf("%d / %d = (Quot: %d, Rem: %d)", test.num, test.deno, gQuot, gRem)
+    }
+  }
+
+  // What if one output is not used?
+  for _, test := range tests {
+    proc := NewProcess("2to2", new(TwoResults))
+
+    num := proc.ExposeIn("Num")
+    deno := proc.ExposeIn("Deno")
+    quot := proc.ExposeOut("Quot")
+    rem := proc.ExposeOut("Rem")
+
+    proc.Run()
+    num.channel <- test.num
+    deno.channel <- test.deno
+
+    gQuot := <-quot.channel
+    // The following code is optional
+    // if not coded outPorts is unseted
+    <-rem.channel
+    if gQuot != test.expectQuot{
+      t.Errorf("%d / %d = (Quot: %d)", test.num, test.deno, gQuot)
+    }
+  }
+}
+
+type TwoResults struct {
+  Num int
+  Deno int
+  Quot int
+  Rem int
+}
+
+func (t *TwoResults) Execute() {
+  t.Quot = t.Num / t.Deno
+  t.Rem = t.Num % t.Deno
+}
+
+// Test a complex task with multi operation and custom defined type
+func TestComplexProcessWithCustomType(t *testing.T) {
+  tests := []struct {
+    mt MyType
+    inc int
+    expected string
+  }{
+    {
+      MyType{[]int{1, 2}, 2},
+      100,
+      "106",
+    },
+    {
+      MyType{[]int{1, 2, 4, 6}, 0},
+      1000,
+      "1000",
+    },
+  }
+
+  for _, test := range tests {
+    proc := NewProcess("complexTask", new(ComplexTask))
+
+    myType := proc.ExposeIn("MyT")
+    inc := proc.ExposeIn("Inc")
+    out := proc.ExposeOut("Out")
+
+    proc.Run()
+    myType.channel <- test.mt
+    inc.channel <- test.inc
+
+    got := <-out.channel
+    if got != test.expected {
+      t.Errorf("process ComplexTask[MyT=%v, Inc=%d], got %s, expected %s", test.mt, test.inc, got, test.expected)
+    }
+  }
+}
+
+type MyType struct {
+  Adder []int
+  Scaler int
+}
+
+type ComplexTask struct {
+  MyT MyType
+  Inc int
+  Out string
+}
+
+func (t *ComplexTask) Execute() {
+  myType := t.MyT
+  sum := 0
+  for _, i := range myType.Adder {
+    sum += i
+  }
+  sum *= myType.Scaler
+  t.Out = strconv.Itoa(sum + t.Inc)
+}
+
 // // Test Process as independent plugin two int input and string output
 // func TestProcessWithTwoInputsPlugin(t *testing.T) {
 //   tests := []struct {
