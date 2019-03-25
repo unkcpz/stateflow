@@ -67,11 +67,13 @@ func (w *Workflow) MapOut(name, procName, portName string) {
   w.OutPorts[name] = p.ExposeOut(portName)
 }
 
+// ExposeIn expose proc's port to workflow and return ptr to Port
 func (w *Workflow) ExposeIn(name string) *Port {
   w.exposePorts[name] = w.InPorts[name]
   return w.InPorts[name]
 }
 
+// ExposeOut expose proc's port to workflow and return ptr to Port
 func (w *Workflow) ExposeOut(name string) *Port {
   w.exposePorts[name] = w.OutPorts[name]
   return w.OutPorts[name]

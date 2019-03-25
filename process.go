@@ -41,10 +41,12 @@ func NewProcess(name string, task Tasker) *Process {
   return proc
 }
 
+// Name return process's name
 func (p  *Process) Name() string {
   return p.name
 }
 
+// ExposeIn return Port for channel
 func (p *Process) ExposeIn(name string) *Port {
   port := p.ports[name]
   p.InPorts[name] = port
@@ -52,6 +54,7 @@ func (p *Process) ExposeIn(name string) *Port {
   return port
 }
 
+// ExposeOut return Port for channel
 func (p *Process) ExposeOut(name string) *Port {
   port := p.ports[name]
   p.OutPorts[name] = port
@@ -59,13 +62,14 @@ func (p *Process) ExposeOut(name string) *Port {
   return port
 }
 
+// In set InPort's cache
 func (p *Process) In(name string, data interface{}) {
   port := p.ports[name]
   port.cache = data
   p.InPorts[name] = port
 }
 
-// Out get result from outport
+// Out get OutPort's cache
 func (p *Process) Out(name string) interface{} {
   port := p.ports[name]
   p.OutPorts[name] = port
