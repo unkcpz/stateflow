@@ -2,6 +2,7 @@ package flowmat
 
 import (
   // "log"
+  "fmt"
 )
 
 type Processer interface {
@@ -54,19 +55,6 @@ func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
   }()
 }
 
-// func (w *Workflow) SetIn(name string, channel chan interface{}) {
-//   w.inPorts[name] = &Port{
-//     channel: channel,
-//   }
-// }
-//
-// // SetOut bind port to a channel
-// func (w *Workflow) SetOut(name string, channel chan interface{}) {
-//   w.outPorts[name] = &Port{
-//     channel: channel,
-//   }
-// }
-
 // MapIn map inPorts of process to workflow
 func (w *Workflow) MapIn(name, procName, portName string) {
   p := w.proc[procName]
@@ -80,19 +68,21 @@ func (w *Workflow) MapOut(name, procName, portName string) {
 }
 
 func (w *Workflow) ExposeIn(name string) *Port {
+  w.exposePorts[name] = w.InPorts[name]
   return w.InPorts[name]
 }
 
 func (w *Workflow) ExposeOut(name string) *Port {
+  w.exposePorts[name] = w.OutPorts[name]
   return w.OutPorts[name]
 }
 
-// // In pass the data to the inport
-// func (w *Workflow) In(portName string, data interface{}) {
-//   port := w.inPorts[portName]
-//   port.cache = data
-// }
-//
+// In pass the data to the inport
+func (w *Workflow) In(portName string, data interface{}) {
+  p := w.InPorts[portName]
+  p.cache = data
+}
+
 // // Out get the result from outport
 // func (w *Workflow) Out(portName string) interface{} {
 //   data := w.outPorts[portName].cache
@@ -108,11 +98,12 @@ func (w *Workflow) Run() {
     p.Run()
   }
   // for name, port := range w.InPorts {
-  //   cacheData := port.cache
   //   if _, ok := w.exposePorts[name]; !ok {
-  //     port.channel <- cacheData
+  //     port.channel <- port.cache
   //   }
   // }
+  fmt.Println(w.InPorts["wfIn"])
+  // w.InPorts["wfIn"].channel <- w.InPorts["wfIn"].cache
   // // if the port not expose, store it in cache
   // for name, port := range w.OutPorts {
   //   if _, ok := w.exposePorts[name]; !ok {
