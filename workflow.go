@@ -16,6 +16,7 @@ type Workflow struct {
   proc map[string]Processer
   inPorts map[string]*Port
   outPorts map[string]*Port
+  exposePorts map[string]*Port
 }
 
 // NewWorkflow create workflow object
@@ -25,6 +26,7 @@ func NewWorkflow(name string) *Workflow {
     proc: make(map[string]Processer),
     inPorts: make(map[string]*Port),
     outPorts: make(map[string]*Port),
+    exposePorts: make(map[string]*Port),
   }
   return wf
 }
@@ -45,12 +47,6 @@ func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
   out := make(chan interface{})
   in := make(chan interface{})
 
-  // s.outPorts[sendPort] = &Port{
-  //   channel: out,
-  // }
-  // r.inPorts[recvPort] = &Port{
-  //   channel: in,
-  // }
   s.SetOut(sendPort, out)
   r.SetIn(recvPort, in)
 
@@ -73,32 +69,32 @@ func (w *Workflow) SetOut(name string, channel chan interface{}) {
   }
 }
 
-// ExposeIn expose inPorts of process to workflow
-func (w *Workflow) ExposeIn(name, procName, portName string) {
-  w.inPorts[name] = new(Port)
+// MapIn map inPorts of process to workflow
+func (w *Workflow) MapIn(name, procName, portName string) {
   channel := make(chan interface{})
-  wfport := w.inPorts[name]
-  wfport.channel = channel
+  w.SetIn(name, channel)
 
   p := w.proc[procName]
-  // p.inPorts[portName] = &Port{
-  //   channel: channel,
-  // }
   p.SetIn(portName, channel)
 }
 
-// ExposeOut expose outPorts of process to workflow
-func (w *Workflow) ExposeOut(name, procName, portName string) {
-  w.outPorts[name] = new(Port)
+// MapOut map outPorts of process to workflow
+func (w *Workflow) MapOut(name, procName, portName string) {
   channel := make(chan interface{})
-  wfport := w.outPorts[name]
-  wfport.channel = channel
+  w.SetOut(name, channel)
 
   p := w.proc[procName]
-  // p.outPorts[portName] = &Port{
-  //   channel: channel,
-  // }
   p.SetOut(portName, channel)
+}
+
+func (w *Workflow) ExposeIn(name string) chan interface{} {
+  w.exposePorts[name] = new(Port)
+  return w.inPorts[name].channel
+}
+
+func (w *Workflow) ExposeOut(name string) chan interface{} {
+  w.exposePorts[name] = new(Port)
+  return w.outPorts[name].channel
 }
 
 // In pass the data to the inport
@@ -121,18 +117,17 @@ func (w *Workflow) Run() {
   for _, p := range w.proc {
     p.Run()
   }
-  for _, port := range w.inPorts {
+  for name, port := range w.inPorts {
     cacheData := port.cache
-    // if cacheData == nil {
-    //   log.Panicf("input not been set for port %s", portName)
-    // }
-    if cacheData != nil {
+    if _, ok := w.exposePorts[name]; !ok {
       port.channel <- cacheData
     }
   }
-  // Here is the trickyyyyy!!
-  for _, port := range w.outPorts {
-    data := <-port.channel
-    port.cache = data
+  // if the port not expose, store it in cache
+  for name, port := range w.outPorts {
+    if _, ok := w.exposePorts[name]; !ok {
+      data := <-port.channel
+      port.cache = data
+    }
   }
 }
