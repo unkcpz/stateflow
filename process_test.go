@@ -3,6 +3,7 @@ package flowmat
 import (
   "testing"
   "strconv"
+  // "fmt"
 )
 
 // Test Process two int input and string output
@@ -28,6 +29,7 @@ func TestProcessWithTwoInputs(t *testing.T) {
     y.channel <- test.b
 
     got := <-sum.channel
+
     if got !=test.sum {
       t.Errorf("component: %d + %d == %d", test.a, test.b, got)
     }
@@ -169,39 +171,39 @@ func (t *ComplexTask) Execute() {
   t.Out = strconv.Itoa(sum + t.Inc)
 }
 
-// // Test Process as independent plugin two int input and string output
-// func TestProcessWithTwoInputsPlugin(t *testing.T) {
-//   tests := []struct {
-//     a int
-//     b int
-//     sum string
-//   }{
-//     {1, 2, "3"},
-//     {-1, 1, "0"},
-//   }
-//
-//   for _, test := range tests {
-//     proc := NewProcess("adder", new(AdderToStrPlugin))
-//
-//     proc.In("X", test.a)
-//     proc.In("Y", test.b)
-//
-//     proc.Run()
-//
-//     got := proc.Out("Sum")
-//     if got !=test.sum {
-//       t.Errorf("plugin: %d + %d == %s", test.a, test.b, got)
-//     }
-//   }
-// }
-//
-//
-// type AdderToStrPlugin struct {
-//   X int
-//   Y int
-//   Sum string
-// }
-//
-// func (t *AdderToStrPlugin) Execute() {
-//   t.Sum = strconv.Itoa(t.X + t.Y)
-// }
+// Test Process as independent plugin two int input and string output
+func TestProcessWithTwoInputsPlugin(t *testing.T) {
+  tests := []struct {
+    a int
+    b int
+    sum string
+  }{
+    {1, 2, "3"},
+    {-1, 1, "0"},
+  }
+
+  for _, test := range tests {
+    proc := NewProcess("adder", new(AdderToStrPlugin))
+
+    proc.In("X", test.a)
+    proc.In("Y", test.b)
+
+    proc.Run()
+
+    got := proc.Out("Sum")
+    if got !=test.sum {
+      t.Errorf("plugin: %d + %d == %s", test.a, test.b, got)
+    }
+  }
+}
+
+
+type AdderToStrPlugin struct {
+  X int
+  Y int
+  Sum string
+}
+
+func (t *AdderToStrPlugin) Execute() {
+  t.Sum = strconv.Itoa(t.X + t.Y)
+}
