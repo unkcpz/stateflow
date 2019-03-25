@@ -16,7 +16,7 @@ type Process struct {
   InPorts map[string]*Port
   OutPorts map[string]*Port
   ports map[string]*Port
-  cachePorts map[string]*Port
+  exposePorts map[string]*Port
 }
 
 // NewProcess create a Process of a task
@@ -27,7 +27,7 @@ func NewProcess(name string, task Tasker) *Process {
     InPorts: make(map[string]*Port),
     OutPorts: make(map[string]*Port),
     ports: make(map[string]*Port),
-    cachePorts: make(map[string]*Port),
+    exposePorts: make(map[string]*Port),
   }
   val := reflect.ValueOf(task).Elem()
   // Bind every field of task to a port
@@ -48,12 +48,14 @@ func (p  *Process) Name() string {
 func (p *Process) ExposeIn(name string) *Port {
   port := p.ports[name]
   p.InPorts[name] = port
+  p.exposePorts[name] = port
   return port
 }
 
 func (p *Process) ExposeOut(name string) *Port {
   port := p.ports[name]
   p.OutPorts[name] = port
+  p.exposePorts[name] = port
   return port
 }
 
@@ -61,14 +63,12 @@ func (p *Process) In(name string, data interface{}) {
   port := p.ports[name]
   port.cache = data
   p.InPorts[name] = port
-  p.cachePorts[name] = port
 }
 
 // Out get result from outport
 func (p *Process) Out(name string) interface{} {
   port := p.ports[name]
   p.OutPorts[name] = port
-  p.cachePorts[name] = port
 
   return port.cache
 }
@@ -124,7 +124,7 @@ func (p *Process) Run() {
 
   // //
   for name, port := range p.InPorts {
-    if _, ok := p.cachePorts[name]; ok {
+    if _, ok := p.exposePorts[name]; !ok {
       port.channel <- port.cache
     }
   }

@@ -2,7 +2,7 @@ package flowmat
 
 import (
   // "log"
-  "fmt"
+  // "fmt"
 )
 
 type Processer interface {
@@ -83,32 +83,27 @@ func (w *Workflow) In(portName string, data interface{}) {
   p.cache = data
 }
 
-// // Out get the result from outport
-// func (w *Workflow) Out(portName string) interface{} {
-//   data := w.outPorts[portName].cache
-//   // if data == nil {
-//   //   log.Panicf("%s has not get data", portName)
-//   // }
-//   return data
-// }
+// Out get the result from outport
+func (w *Workflow) Out(portName string) interface{} {
+  data := w.OutPorts[portName].cache
+  return data
+}
 
 // Run the workflow aka its process in order
 func (w *Workflow) Run() {
   for _, p := range w.proc {
     p.Run()
   }
-  // for name, port := range w.InPorts {
-  //   if _, ok := w.exposePorts[name]; !ok {
-  //     port.channel <- port.cache
-  //   }
-  // }
-  fmt.Println(w.InPorts["wfIn"])
-  // w.InPorts["wfIn"].channel <- w.InPorts["wfIn"].cache
-  // // if the port not expose, store it in cache
-  // for name, port := range w.OutPorts {
-  //   if _, ok := w.exposePorts[name]; !ok {
-  //     data := <-port.channel
-  //     port.cache = data
-  //   }
-  // }
+  for name, port := range w.InPorts {
+    if _, ok := w.exposePorts[name]; !ok {
+      port.channel <- port.cache
+    }
+  }
+  // if the port not expose, store it in cache
+  for name, port := range w.OutPorts {
+    if _, ok := w.exposePorts[name]; !ok {
+      data := <-port.channel
+      port.cache = data
+    }
+  }
 }
