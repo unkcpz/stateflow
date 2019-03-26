@@ -4,6 +4,9 @@ import (
   "testing"
   "strconv"
   "log"
+  "time"
+  "math/rand"
+  // "fmt"
 )
 
 func TestComplexParaWorkflow(t *testing.T) {
@@ -49,8 +52,12 @@ func TestComplexParaWorkflow(t *testing.T) {
 
     wf.In("wfIn", test.in)
     wf.Load()
+
+    start := time.Now()
     wf.Start()
     wf.Finish()
+
+    Trace.Printf("ParaWF took %v", time.Since(start))
 
     got := wf.Out("wfOut")
     if got.(float64) != test.out {
@@ -66,6 +73,16 @@ type TimeTwo struct {
 }
 
 func (t *TimeTwo) Execute() {
+  // Sleep and check audit
+  // to make sure run parallel
+  // Run with GOMAXPROCS = 4(default) cpus number
+  // Audit <6 seconds
+  // not exceed the max one
+  s := rand.NewSource(time.Now().UnixNano())
+  r := rand.New(s)
+  sleep := r.Intn(600)
+  Trace.Printf("sleep: %d Millisecond", sleep)
+  time.Sleep(time.Duration(sleep) * time.Millisecond)
   t.Out = t.In * 2
 }
 
