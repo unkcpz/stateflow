@@ -2,7 +2,7 @@ package flowmat
 
 import (
   // "log"
-  // "fmt"
+  "fmt"
 )
 
 type Processer interface {
@@ -41,10 +41,25 @@ func (w *Workflow) Add(p Processer) {
   w.proc[p.Name()] = p
 }
 
+// proc return proc of WF if not exist raise error
+func (w *Workflow) getProc(name string) (p Processer, err error) {
+  p, ok := w.proc[name]
+  if !ok {
+    return nil, fmt.Errorf("can't get Processer %s", name)
+  }
+  return p, nil
+}
+
 // Connect outport of Process A(sendProc) to inport of Process B(recvProc)
-func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
-  s := w.proc[sendProc]
-  r := w.proc[recvProc]
+func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) error {
+  s, err := w.getProc(sendProc)
+  if err != nil {
+    return err
+  }
+  r, err := w.getProc(recvProc)
+  if err != nil {
+    return err
+  }
 
   out := s.ExposeOut(sendPort)
   in := r.ExposeIn(recvPort)
@@ -53,6 +68,8 @@ func (w *Workflow) Connect(sendProc, sendPort, recvProc, recvPort string) {
     v := <-out.channel
     in.channel <- v
   }()
+
+  return nil
 }
 
 // MapIn map inPorts of process to workflow
