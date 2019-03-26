@@ -93,18 +93,27 @@ func (w *Workflow) Out(portName string) interface{} {
 
 // Load the workflow aka its process in order
 func (w *Workflow) Load() {
+  LogAuditf(w.Name(), "WF:Loading:[%s]", portInfo(w.InPorts))
   for _, p := range w.proc {
     p.Load()
   }
+}
+
+func (w *Workflow) Start() {
+  LogAuditf(w.Name(), "WF:Running:[%s]", portInfo(w.InPorts))
   for name, port := range w.InPorts {
     if _, ok := w.exposePorts[name]; !ok {
       port.Feed(nil)
     }
   }
+}
+
+func (w *Workflow) Finish() {
   // if the port not expose, store it in cache
   for name, port := range w.OutPorts {
     if _, ok := w.exposePorts[name]; !ok {
       port.Extract()
     }
   }
+  LogAuditf(w.Name(), "WF:Finished:[%s]", portInfo(w.OutPorts))
 }

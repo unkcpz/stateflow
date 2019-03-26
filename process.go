@@ -3,7 +3,8 @@ package flowmat
 import (
   "reflect"
   "sync"
-  // "fmt"
+  "fmt"
+  "strings"
 )
 
 type Tasker interface{
@@ -91,6 +92,19 @@ func collectUnsetPorts(proc *Process) {
   }
 }
 
+func portInfo(ports map[string]*Port) string {
+  var str strings.Builder
+  var holder string
+  for name, port := range ports {
+    str.WriteString(holder)
+    str.WriteString(name)
+    str.WriteString(":")
+    str.WriteString(fmt.Sprintf("%v", port.cache))
+    holder = "; "
+  }
+  return str.String()
+}
+
 // Load process
 func (p *Process) Load() {
   collectUnsetPorts(p)
@@ -114,6 +128,8 @@ func (p *Process) Load() {
     }
     wg.Wait()
 
+    LogAuditf(p.Name(), "PROC:Running:[%s]", portInfo(p.InPorts))
+
     // Execute the function of Process
     task.Execute()
 
@@ -129,6 +145,8 @@ func (p *Process) Load() {
       }(name, port)
     }
     wg.Wait()
+
+    LogAuditf(p.Name(), "PROC:Finished:[%s]", portInfo(p.OutPorts))
   }()
 }
 
