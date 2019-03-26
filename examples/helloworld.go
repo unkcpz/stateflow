@@ -18,9 +18,9 @@ func main() {
   wf.Add(p1)
   wf.Add(p2)
 
-  err := wf.Connect("capin", "Out", "Greet", "Name")
+  err := wf.Connect("capin", "Out", "greet", "Name")
   if err != nil {
-    log.Println(err)
+    log.Fatalln(err)
   }
   wf.MapIn("wfIn", "capin", "In")
   wf.MapOut("wfOut", "greet", "Greeting")
