@@ -25,10 +25,10 @@ func TestProcessWithTwoInputs(t *testing.T) {
     sum := proc.ExposeOut("Sum")
 
     proc.Run()
-    x.channel <- test.a
-    y.channel <- test.b
+    x.Feed(test.a)
+    y.Feed(test.b)
 
-    got := <-sum.channel
+    got := sum.Extract()
 
     if got !=test.sum {
       t.Errorf("component: %d + %d == %d", test.a, test.b, got)
@@ -68,11 +68,11 @@ func TestProcessTwoInTwoOut(t *testing.T) {
     rem := proc.ExposeOut("Rem")
 
     proc.Run()
-    num.channel <- test.num
-    deno.channel <- test.deno
+    num.Feed(test.num)
+    deno.Feed(test.deno)
 
-    gQuot := <-quot.channel
-    gRem := <-rem.channel
+    gQuot := quot.Extract()
+    gRem := rem.Extract()
     if gQuot != test.expectQuot || gRem != test.expectRem {
       t.Errorf("%d / %d = (Quot: %d, Rem: %d)", test.num, test.deno, gQuot, gRem)
     }
@@ -88,13 +88,11 @@ func TestProcessTwoInTwoOut(t *testing.T) {
     rem := proc.ExposeOut("Rem")
 
     proc.Run()
-    num.channel <- test.num
-    deno.channel <- test.deno
+    num.Feed(test.num)
+    deno.Feed(test.deno)
 
-    gQuot := <-quot.channel
-    // The following code is optional
-    // if not coded outPorts is unseted
-    <-rem.channel
+    gQuot := quot.Extract()
+    rem.Extract()
     if gQuot != test.expectQuot{
       t.Errorf("%d / %d = (Quot: %d)", test.num, test.deno, gQuot)
     }
@@ -140,10 +138,10 @@ func TestComplexProcessWithCustomType(t *testing.T) {
     out := proc.ExposeOut("Out")
 
     proc.Run()
-    myType.channel <- test.mt
-    inc.channel <- test.inc
+    myType.Feed(test.mt)
+    inc.Feed(test.inc)
 
-    got := <-out.channel
+    got := out.Extract()
     if got != test.expected {
       t.Errorf("process ComplexTask[MyT=%v, Inc=%d], got %s, expected %s", test.mt, test.inc, got, test.expected)
     }

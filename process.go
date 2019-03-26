@@ -62,6 +62,7 @@ func (p *Process) ExposeOut(name string) *Port {
   return port
 }
 
+
 // In set InPort's cache
 func (p *Process) In(name string, data interface{}) {
   port := p.ports[name]
@@ -126,13 +127,14 @@ func (p *Process) Run() {
     wg.Wait()
   }()
 
-  // //
+  // Feed the inputs aka start Chain
   for name, port := range p.InPorts {
     if _, ok := p.exposePorts[name]; !ok {
-      port.channel <- port.cache
+      port.Feed(nil)
     }
   }
+  // Extract the outputs
   for _, port := range unset {
-    <-port.channel
+    port.Extract()
   }
 }
