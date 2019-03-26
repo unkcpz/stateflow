@@ -1,22 +1,22 @@
 package flowmat
 
 import (
-  "testing"
-  "io/ioutil"
-  "os"
+	"io/ioutil"
+	"os"
+	"testing"
 )
 
 // All test logs are discard
 func TraceTestLogs() {
-  InitLog(
-    os.Stdout,
-    ioutil.Discard,
-  )
+	InitLog(
+		os.Stdout,
+		ioutil.Discard,
+	)
 }
 
 // Test Main
 func TestMain(m *testing.M) {
-  // InitLogAudit()
-  TraceTestLogs()
-  m.Run()
+	// InitLogAudit()
+	TraceTestLogs()
+	m.Run()
 }
