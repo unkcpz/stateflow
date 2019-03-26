@@ -72,8 +72,8 @@ func TestUseWorkflowAsProcess(t *testing.T) {
 
     wf.Run()
 
-    in.channel <-test.in
-    got := <-out.channel
+    in.Feed(test.in)
+    got := out.Extract()
 
     if got.(int) != test.out {
       t.Errorf("%d + 2 = %d", test.in, got)

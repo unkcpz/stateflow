@@ -98,14 +98,13 @@ func (w *Workflow) Run() {
   }
   for name, port := range w.InPorts {
     if _, ok := w.exposePorts[name]; !ok {
-      port.channel <- port.cache
+      port.Feed(nil)
     }
   }
   // if the port not expose, store it in cache
   for name, port := range w.OutPorts {
     if _, ok := w.exposePorts[name]; !ok {
-      data := <-port.channel
-      port.cache = data
+      port.Extract()
     }
   }
 }
