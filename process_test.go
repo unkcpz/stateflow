@@ -77,22 +77,34 @@ func TestProcessTwoInTwoOut(t *testing.T) {
       t.Errorf("%d / %d = (Quot: %d, Rem: %d)", test.num, test.deno, gQuot, gRem)
     }
   }
+}
 
-  // What if one output is not used?
+// Test process of multiple output int, int -> int, int
+func TestProcessTwoInTwoOutNotAllUsed(t *testing.T) {
+  tests := []struct {
+    num int
+    deno int
+    expectQuot int
+    expectRem int
+  }{
+    {5, 4, 1, 1},
+    {10, 3, 3, 1},
+  }
+
+  // What if one output is not exposed and used?
   for _, test := range tests {
     proc := NewProcess("2to2", new(TwoResults))
 
     num := proc.ExposeIn("Num")
     deno := proc.ExposeIn("Deno")
     quot := proc.ExposeOut("Quot")
-    rem := proc.ExposeOut("Rem")
 
     proc.Load()
     num.Feed(test.num)
     deno.Feed(test.deno)
+    proc.Finish()
 
     gQuot := quot.Extract()
-    rem.Extract()
     if gQuot != test.expectQuot{
       t.Errorf("%d / %d = (Quot: %d)", test.num, test.deno, gQuot)
     }
@@ -187,6 +199,8 @@ func TestProcessWithTwoInputsPlugin(t *testing.T) {
     proc.In("Y", test.b)
 
     proc.Load()
+    proc.Start()
+    proc.Finish()
 
     got := proc.Out("Sum")
     if got !=test.sum {

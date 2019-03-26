@@ -17,6 +17,7 @@ type Process struct {
   OutPorts map[string]*Port
   ports map[string]*Port
   exposePorts map[string]*Port
+  unsetPorts map[string]*Port
 }
 
 // NewProcess create a Process of a task
@@ -28,6 +29,7 @@ func NewProcess(name string, task Tasker) *Process {
     OutPorts: make(map[string]*Port),
     ports: make(map[string]*Port),
     exposePorts: make(map[string]*Port),
+    unsetPorts: make(map[string]*Port),
   }
   val := reflect.ValueOf(task).Elem()
   // Bind every field of task to a port
@@ -78,22 +80,24 @@ func (p *Process) Out(name string) interface{} {
   return port.cache
 }
 
-// Load process
-func (p *Process) Load() {
-  task := p.task
-  val := reflect.ValueOf(task).Elem()
-
-  unset := make([]*Port, 0)
-  for name, _ := range p.ports {
-    _, okIn := p.InPorts[name]
-    _, okOut := p.OutPorts[name]
+// collect unset ports
+func collectUnsetPorts(proc *Process) {
+  for name, _ := range proc.ports {
+    _, okIn := proc.InPorts[name]
+    _, okOut := proc.OutPorts[name]
     if !okIn && !okOut {
-      unset = append(unset, p.ExposeOut(name))
+      proc.unsetPorts[name] = proc.ExposeOut(name)
     }
   }
+}
 
+// Load process
+func (p *Process) Load() {
+  collectUnsetPorts(p)
   // gorountine get input and run Execute()
   go func(){
+    task := p.task
+    val := reflect.ValueOf(task).Elem()
     var wg sync.WaitGroup
     for name, port := range p.InPorts {
       wg.Add(1)
@@ -126,15 +130,22 @@ func (p *Process) Load() {
     }
     wg.Wait()
   }()
+}
 
+// Start Process by feed all ready inputs
+func (p *Process) Start() {
   // Feed the inputs aka start Chain
   for name, port := range p.InPorts {
     if _, ok := p.exposePorts[name]; !ok {
       port.Feed(nil)
     }
   }
+}
+
+// Finish Process by extract all output and store value to cache
+func (p *Process) Finish() {
   // Extract the outputs
-  for _, port := range unset {
+  for _, port := range p.unsetPorts {
     port.Extract()
   }
 }
