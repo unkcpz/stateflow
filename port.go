@@ -1,4 +1,4 @@
-package flowmat
+package gflow
 
 type Port struct {
 	channel chan interface{}

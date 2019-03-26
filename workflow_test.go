@@ -1,4 +1,4 @@
-package flowmat
+package gflow
 
 import (
 	"testing"
