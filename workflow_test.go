@@ -36,7 +36,7 @@ func TestSimpleWorkflow(t *testing.T) {
     wf.MapOut("wfOut", "p2", "Out")
 
     wf.In("wfIn", test.in)
-    wf.Run()
+    wf.Load()
 
     got := wf.Out("wfOut")
     if got.(int) != test.out {
@@ -70,7 +70,7 @@ func TestUseWorkflowAsProcess(t *testing.T) {
     in := wf.ExposeIn("wfIn")
     out := wf.ExposeOut("wfOut")
 
-    wf.Run()
+    wf.Load()
 
     in.Feed(test.in)
     got := out.Extract()
@@ -113,7 +113,7 @@ func TestWorkflowIsProcess(t *testing.T) {
     wf.MapOut("wfOut", "wftest", "wfOut")
 
     wf.In("wfIn", test.in)
-    wf.Run()
+    wf.Load()
 
     got := wf.Out("wfOut")
     if got.(int) != test.out {
@@ -154,7 +154,7 @@ func TestWorkflowIsProcessWfToProc(t *testing.T) {
     wf.MapOut("wfOut", "pa", "Out")
 
     wf.In("wfIn", test.in)
-    wf.Run()
+    wf.Load()
 
     got := wf.Out("wfOut")
     if got.(int) != test.out {

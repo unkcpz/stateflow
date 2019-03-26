@@ -78,8 +78,8 @@ func (p *Process) Out(name string) interface{} {
   return port.cache
 }
 
-// Run process
-func (p *Process) Run() {
+// Load process
+func (p *Process) Load() {
   task := p.task
   val := reflect.ValueOf(task).Elem()
 

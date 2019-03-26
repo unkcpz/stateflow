@@ -24,7 +24,7 @@ func TestProcessWithTwoInputs(t *testing.T) {
     y := proc.ExposeIn("Y")
     sum := proc.ExposeOut("Sum")
 
-    proc.Run()
+    proc.Load()
     x.Feed(test.a)
     y.Feed(test.b)
 
@@ -67,7 +67,7 @@ func TestProcessTwoInTwoOut(t *testing.T) {
     quot := proc.ExposeOut("Quot")
     rem := proc.ExposeOut("Rem")
 
-    proc.Run()
+    proc.Load()
     num.Feed(test.num)
     deno.Feed(test.deno)
 
@@ -87,7 +87,7 @@ func TestProcessTwoInTwoOut(t *testing.T) {
     quot := proc.ExposeOut("Quot")
     rem := proc.ExposeOut("Rem")
 
-    proc.Run()
+    proc.Load()
     num.Feed(test.num)
     deno.Feed(test.deno)
 
@@ -137,7 +137,7 @@ func TestComplexProcessWithCustomType(t *testing.T) {
     inc := proc.ExposeIn("Inc")
     out := proc.ExposeOut("Out")
 
-    proc.Run()
+    proc.Load()
     myType.Feed(test.mt)
     inc.Feed(test.inc)
 
@@ -186,7 +186,7 @@ func TestProcessWithTwoInputsPlugin(t *testing.T) {
     proc.In("X", test.a)
     proc.In("Y", test.b)
 
-    proc.Run()
+    proc.Load()
 
     got := proc.Out("Sum")
     if got !=test.sum {

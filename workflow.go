@@ -7,7 +7,7 @@ import (
 
 type Processer interface {
   Name() string
-  Run()
+  Load()
   ExposeIn(string) *Port
   ExposeOut(string) *Port
 }
@@ -91,10 +91,10 @@ func (w *Workflow) Out(portName string) interface{} {
   return data
 }
 
-// Run the workflow aka its process in order
-func (w *Workflow) Run() {
+// Load the workflow aka its process in order
+func (w *Workflow) Load() {
   for _, p := range w.proc {
-    p.Run()
+    p.Load()
   }
   for name, port := range w.InPorts {
     if _, ok := w.exposePorts[name]; !ok {
