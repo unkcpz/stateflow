@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/unkcpz/stateflow"
 	"log"
 	"strings"
+
+	"github.com/unkcpz/stateflow"
 )
 
 func main() {
