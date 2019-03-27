@@ -13,12 +13,12 @@ package main
 import (
   "strings"
   "fmt"
-	"log"
+  "log"
   "github.com/unkcpz/stateflow"
 )
 
 func main() {
-	stateflow.InitLogAudit()
+  stateflow.InitLogAudit()
 
   myname := "Jason"
   p1 := stateflow.NewProcess("capin", new(CapIn))
