@@ -1,55 +1,51 @@
 package main
 
 import (
-  "strings"
-  "fmt"
+	"fmt"
+	"github.com/unkcpz/stateflow"
 	"log"
-  "github.com/unkcpz/stateflow"
+	"strings"
 )
 
 func main() {
 	stateflow.InitLogAudit()
 
-  myname := "Jason"
-  p1 := stateflow.NewProcess("capin", new(CapIn))
-  p2 := stateflow.NewProcess("greet", new(Greet))
+	myname := "Jason"
 
-  wf := stateflow.NewWorkflow("greetWF")
-  wf.Add(p1)
-  wf.Add(p2)
+	wf := stateflow.NewWorkflow("greetWF")
+	wf.NewProcess("capin", new(CapIn))
+	wf.NewProcess("greet", new(Greet))
 
-  err := wf.Connect("capin", "Out", "greet", "Name")
-  if err != nil {
-    log.Fatalln(err)
-  }
-  wf.MapIn("wfIn", "capin", "In")
-  wf.MapOut("wfOut", "greet", "Greeting")
+	err := wf.Connect("capin", "Out", "greet", "Name")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	wf.MapIn("wfIn", "capin", "In")
+	wf.MapOut("wfOut", "greet", "Greeting")
 
-  wf.In("wfIn", myname)
-  wf.Load()
-  wf.Start()
-  wf.Finish()
+	wf.In("wfIn", myname)
+	wf.Flow()
 
-  greeting := wf.Out("wfOut")
-  fmt.Println(greeting)
+	greeting := wf.Out("wfOut")
+	fmt.Println(greeting)
 }
 
 // Task to capitalize In
 type CapIn struct {
-  In string
-  Out string
+	In  string
+	Out string
 }
 
 func (t *CapIn) Execute() {
-  t.Out = strings.ToUpper(t.In)
+	t.Out = strings.ToUpper(t.In)
 }
 
 // Task for greeting
 type Greet struct {
-  Name string
-  Greeting string
+	Name     string
+	Greeting string
 }
 
 func (t *Greet) Execute() {
-  t.Greeting = fmt.Sprintf("Hello %s.", t.Name)
+	t.Greeting = fmt.Sprintf("Hello %s.", t.Name)
 }

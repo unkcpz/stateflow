@@ -24,21 +24,16 @@ func TestSimpleWorkflow(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		p1 := NewProcess("p1", new(PlusOneWF))
-		p2 := NewProcess("p2", new(PlusOneWF))
-
 		wf := NewWorkflow("test_wf")
-		wf.Add(p1)
-		wf.Add(p2)
+		wf.NewProcess("p1", new(PlusOneWF))
+		wf.NewProcess("p2", new(PlusOneWF))
 		wf.Connect("p1", "Out", "p2", "In")
 
 		wf.MapIn("wfIn", "p1", "In")
 		wf.MapOut("wfOut", "p2", "Out")
 
 		wf.In("wfIn", test.in)
-		wf.Load()
-		wf.Start()
-		wf.Finish()
+		wf.Flow()
 
 		got := wf.Out("wfOut")
 		if got.(int) != test.out {
