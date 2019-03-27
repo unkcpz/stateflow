@@ -1,4 +1,4 @@
-package gflow
+package stateflow
 
 import (
 	"strconv"

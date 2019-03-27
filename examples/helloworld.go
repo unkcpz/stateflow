@@ -4,17 +4,17 @@ import (
   "strings"
   "fmt"
 	"log"
-  "github.com/unkcpz/gflow"
+  "github.com/unkcpz/stateflow"
 )
 
 func main() {
-	gflow.InitLogAudit()
+	stateflow.InitLogAudit()
 
   myname := "Jason"
-  p1 := gflow.NewProcess("capin", new(CapIn))
-  p2 := gflow.NewProcess("greet", new(Greet))
+  p1 := stateflow.NewProcess("capin", new(CapIn))
+  p2 := stateflow.NewProcess("greet", new(Greet))
 
-  wf := gflow.NewWorkflow("greetWF")
+  wf := stateflow.NewWorkflow("greetWF")
   wf.Add(p1)
   wf.Add(p2)
 

@@ -1,4 +1,4 @@
-package gflow
+package stateflow
 
 type Port struct {
 	channel chan interface{}

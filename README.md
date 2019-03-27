@@ -1,4 +1,4 @@
-# gflow
+# stateflow
 Pure Go Automated Interactive Infrastructure and Database for Computational Science
 
 ## Introduction
@@ -14,17 +14,17 @@ import (
   "strings"
   "fmt"
 	"log"
-  "github.com/unkcpz/gflow"
+  "github.com/unkcpz/stateflow"
 )
 
 func main() {
-	gflow.InitLogAudit()
+	stateflow.InitLogAudit()
 
   myname := "Jason"
-  p1 := gflow.NewProcess("capin", new(CapIn))
-  p2 := gflow.NewProcess("greet", new(Greet))
+  p1 := stateflow.NewProcess("capin", new(CapIn))
+  p2 := stateflow.NewProcess("greet", new(Greet))
 
-  wf := gflow.NewWorkflow("greetWF")
+  wf := stateflow.NewWorkflow("greetWF")
   wf.Add(p1)
   wf.Add(p2)
 
@@ -71,9 +71,9 @@ func (t *Greet) Execute() {
 
 ## Acknowledgements
 
-<!-- - gflow is very heavily dependent on the proven principles form [Flow-Based
+<!-- - stateflow is very heavily dependent on the proven principles form [Flow-Based
   Programming (FBP)](http://www.jpaulmorrison.com/fbp), as invented by [John Paul Morrison](http://www.jpaulmorrison.com/fbp).
-  From Flow-based programming, gflow uses the ideas of separate network
+  From Flow-based programming, stateflow uses the ideas of separate network
   (workflow dependency graph) definition, named in- and out-ports,
   sub-networks/sub-workflows and bounded buffers (already available in Go's
   channels) to make writing workflows as easy as possible. -->
