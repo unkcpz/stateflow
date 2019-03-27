@@ -13,6 +13,7 @@ Pure Go Automated Interactive Infrastructure and Database for Computational Scie
 
 ### Hello World (Simple Workflow)
 
+![](https://raw.githubusercontent.com/unkcpz/images/master/stateflow.repo/README-simpleWF.png)
 ```go
 package main
 
@@ -69,7 +70,7 @@ func (t *Greet) Execute() {
 ```
 
 ### Simple Process
-
+![](https://raw.githubusercontent.com/unkcpz/images/master/stateflow.repo/README-2in2out.png)
 ```go
 package main
 
@@ -111,6 +112,7 @@ func (t *TwoResults) Execute() {
 ```
 
 ## SubWorkflow
+![](https://raw.githubusercontent.com/unkcpz/images/master/stateflow.repo/README-subwf.png)
 ```go
 package main
 
