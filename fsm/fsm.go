@@ -49,7 +49,15 @@ func (f *FSM) Event(event string) error {
   //
   // f.stateMu.RLock()
   // defer f.stateMu.RUnlock()
-  dst, _ := f.transitions[eKey{event, f.current}]
+  dst, ok := f.transitions[eKey{event, f.current}]
+  if !ok {
+    for ekey := range f.transitions {
+      if ekey.event == event {
+        return InvalidEventError{event, f.current}
+      }
+    }
+    return UnknownEventError{event}
+  }
   f.transition = func() {
     f.current = dst
   }

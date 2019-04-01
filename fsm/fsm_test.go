@@ -57,3 +57,33 @@ func TestBadTransition(t *testing.T) {
     t.Error("bad transition should give an error")
   }
 }
+
+func TestInappropriateEvent(t *testing.T) {
+  fsm := NewFSM(
+    "closed",
+    Events{
+      {Name: "open", Src: []string{"closed"}, Dst: "open"},
+      {Name: "close", Src: []string{"open"}, Dst: "closed"},
+    },
+    Callbacks{},
+  )
+  err := fsm.Event("close")
+  if e, ok := err.(InvalidEventError); !ok && e.Event != "close" && e.State != "closed" {
+    t.Error("expected 'InvalidEventError' with correct state and event")
+  }
+}
+
+func TestInvaliedEvent(t *testing.T) {
+  fsm := NewFSM(
+    "closed",
+    Events{
+      {Name: "open", Src: []string{"closed"}, Dst: "open"},
+      {Name: "close", Src: []string{"open"}, Dst: "closed"},
+    },
+    Callbacks{},
+  )
+  err := fsm.Event("lock")
+  if e, ok := err.(UnknownEventError); !ok && e.Event != "close" {
+    t.Error("expected 'UnknownEventError' with correct event")
+  }
+}
