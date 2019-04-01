@@ -35,3 +35,25 @@ func TestSetState(t *testing.T) {
     t.Error("transition is expected no error")
   }
 }
+
+type fakeTransitionerObj struct {
+}
+
+func (t fakeTransitionerObj) transition(f *FSM) error {
+  return &InternalError{}
+}
+
+func TestBadTransition(t *testing.T) {
+  fsm := NewFSM(
+    "start",
+    Events{
+      {Name: "run", Src: []string{"start"}, Dst: "running"},
+    },
+    Callbacks{},
+  )
+  fsm.transitionerObj = new(fakeTransitionerObj)
+  err := fsm.Event("run")
+  if err == nil {
+    t.Error("bad transition should give an error")
+  }
+}
