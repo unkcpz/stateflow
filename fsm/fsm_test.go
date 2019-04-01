@@ -87,3 +87,67 @@ func TestInvaliedEvent(t *testing.T) {
     t.Error("expected 'UnknownEventError' with correct event")
   }
 }
+
+func TestMultipleSources(t *testing.T) {
+  fsm := NewFSM(
+    "one",
+    Events{
+      {Name: "first", Src: []string{"one"}, Dst: "two"},
+      {Name: "second", Src: []string{"two"}, Dst: "three"},
+      {Name: "reset", Src: []string{"one", "two", "three"}, Dst: "one"},
+    },
+    Callbacks{},
+  )
+
+  fsm.Event("first")
+  if fsm.Current() != "two" {
+    t.Error("expected state to be 'two'")
+  }
+  fsm.Event("reset")
+  if fsm.Current() != "one" {
+    t.Error("expected state to be 'one'")
+  }
+  fsm.Event("first")
+  fsm.Event("second")
+  if fsm.Current() != "three" {
+    t.Error("expected state to be 'three'")
+  }
+  fsm.Event("reset")
+  if fsm.Current() != "one" {
+    t.Error("expected state to be 'one'")
+  }
+}
+
+func TestMultipleEvents(t *testing.T) {
+	fsm := NewFSM(
+		"start",
+		Events{
+			{Name: "first", Src: []string{"start"}, Dst: "one"},
+			{Name: "second", Src: []string{"start"}, Dst: "two"},
+			{Name: "reset", Src: []string{"one"}, Dst: "reset_one"},
+			{Name: "reset", Src: []string{"two"}, Dst: "reset_two"},
+			{Name: "reset", Src: []string{"reset_one", "reset_two"}, Dst: "start"},
+		},
+		Callbacks{},
+	)
+
+	fsm.Event("first")
+	fsm.Event("reset")
+	if fsm.Current() != "reset_one" {
+		t.Error("expected state to be 'reset_one'")
+	}
+	fsm.Event("reset")
+	if fsm.Current() != "start" {
+		t.Error("expected state to be 'start'")
+	}
+
+	fsm.Event("second")
+	fsm.Event("reset")
+	if fsm.Current() != "reset_two" {
+		t.Error("expected state to be 'reset_two'")
+	}
+	fsm.Event("reset")
+	if fsm.Current() != "start" {
+		t.Error("expected state to be 'start'")
+	}
+}
