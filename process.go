@@ -1,4 +1,4 @@
-package flowmat
+package stateflow
 
 import (
 	"fmt"
@@ -145,7 +145,7 @@ func (p *Process) Load() {
 		}
 		wg.Wait()
 
-		LogAuditf(p.Name(), "PROC:Finished:[%s]", portInfo(p.OutPorts))
+		LogAuditf(p.Name(), "PROC:Finishing:[%s]", portInfo(p.OutPorts))
 	}()
 }
 
@@ -165,4 +165,11 @@ func (p *Process) Finish() {
 	for _, port := range p.unsetPorts {
 		port.Extract()
 	}
+	LogAuditf(p.Name(), "PROC:Finished:[%s]", portInfo(p.OutPorts))
+}
+
+func (p *Process) Flow() {
+	p.Load()
+	p.Start()
+	p.Finish()
 }

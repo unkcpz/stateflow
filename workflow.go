@@ -1,4 +1,4 @@
-package flowmat
+package stateflow
 
 import (
 	// "log"
@@ -39,6 +39,13 @@ func (w *Workflow) Name() string {
 // Add process to workflow list
 func (w *Workflow) Add(p Processer) {
 	w.proc[p.Name()] = p
+}
+
+// NewProcess create and add process to workflow
+func (w *Workflow) NewProcess(name string, task Tasker) *Process {
+	p := NewProcess(name, task)
+	w.Add(p)
+	return p
 }
 
 // proc return proc of WF if not exist raise error
@@ -108,7 +115,7 @@ func (w *Workflow) Out(portName string) interface{} {
 	return data
 }
 
-// Load the workflow aka its process in order
+// Load the workflow aka its process in order, wait for input feeded in
 func (w *Workflow) Load() {
 	LogAuditf(w.Name(), "WF:Loading:[%s]", portInfo(w.InPorts))
 	for _, p := range w.proc {
@@ -133,4 +140,10 @@ func (w *Workflow) Finish() {
 		}
 	}
 	LogAuditf(w.Name(), "WF:Finished:[%s]", portInfo(w.OutPorts))
+}
+
+func (w *Workflow) Flow() {
+	w.Load()
+	w.Start()
+	w.Finish()
 }

@@ -1,7 +1,7 @@
-package flowmat
+package stateflow
 
 import (
-	"io/ioutil"
+	// "io/ioutil"
 	"os"
 	"testing"
 )
@@ -10,13 +10,13 @@ import (
 func TraceTestLogs() {
 	InitLog(
 		os.Stdout,
-		ioutil.Discard,
+		os.Stdout,
 	)
 }
 
 // Test Main
 func TestMain(m *testing.M) {
-	// InitLogAudit()
-	TraceTestLogs()
+	InitLogAudit()
+	// TraceTestLogs()
 	m.Run()
 }

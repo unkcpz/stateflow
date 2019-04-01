@@ -1,4 +1,4 @@
-package flowmat
+package stateflow
 
 import (
 	"log"
