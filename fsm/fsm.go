@@ -71,6 +71,11 @@ func (f *FSM) Current() string {
   return f.current
 }
 
+func (f *FSM) SetState(state string) {
+  f.current = state
+  return
+}
+
 type transitionerStruct struct{}
 
 func (t transitionerStruct) transition(f *FSM) error {
