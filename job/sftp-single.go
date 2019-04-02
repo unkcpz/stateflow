@@ -76,13 +76,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// create a new file mimic the job execution
-	newFile, err := client.Create(path.Join(pathname, "newfile"))
+	// execute slurm job
+	sess, err := conn.NewSession()
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer newFile.Close()
-	_, err = newFile.Write([]byte("writes\n"))
+	defer sess.Close()
+
+	sess.Stdout = os.Stdout
+	sess.Stderr = os.Stderr
+
+	// Start remote shell
+	cmd := "cd " + pathname + "; module load vasp/5.4.4-impi-mkl; mpirun -n 4 vasp_std;"
+ 	err = sess.Run(cmd)
 	if err != nil {
 		log.Fatal(err)
 	}
